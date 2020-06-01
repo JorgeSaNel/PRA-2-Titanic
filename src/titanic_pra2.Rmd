@@ -81,13 +81,24 @@ Debido a que en esta práctica no se van a utilizar modelos de predicción, se h
 * **Embarked**: Código de embarque del pasajero. Esta variable tiene los siguientes tres valores posibles; 'C' = Cherbourg, 'Q' = Queenstown, 'S' = Southampton. La variable es de tipo **varchar**.
 
 Para comprobar que las vairables descritas tienen el formato correcto, se procede a leer el fichero y mostrar, con la función 'str', el tipo de dato de cada variable:
-```{r message= FALSE, warning=FALSE}
-# Se lee el el fichero Titanic
-Titanic_file <- read.csv("../dataset/titanic-dataset.csv", header=T, sep=",", stringsAsFactors = FALSE)
-attach(Titanic_file)
 
-# Se representa el tipo de dato de cada variable
-str(Titanic_file)
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+# Cargamos los paquetes R que vamos a usar
+library(ggplot2)
+library(dplyr)
+
+# Guardamos el conjunto de datos test y train en un único dataset
+# titanic <- read.csv('../dataset/titanic-dataset.csv', stringsAsFactors = FALSE)
+test <- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
+train <- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
+
+# Unimos los dos conjuntos de datos en uno solo
+titanic <- bind_rows(train, test)
+
+# Verificamos la estructura del conjunto de datos
+str(titanic)
+
 ```
 
 ## Importancia y objetivos de los análisis
