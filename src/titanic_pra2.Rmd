@@ -287,6 +287,64 @@ colSums(titanic=="")
 
 ## Identificación y tratamiento de valores extremos
 
+Los valores extremos, outliers o valores fuera de rangos pueden ser identificados de distinta forma en función de la tipología de la variable analizada.
+
+En primer lugar, identificaremos valores fuera de rango en variables categóricas. Se trata de categorías no válidas, distintas maneras de codificar una categoría, etc. Extraeremos los valores únicos de dichas variables para ver si existen valores que haya que corregir.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+titanic %>% group_by(Survived) %>% count()
+titanic %>% group_by(Pclass) %>% count()
+titanic %>% group_by(SibSp) %>% count()
+titanic %>% group_by(Parch) %>% count()
+titanic %>% group_by(Embarked) %>% count()
+
+```
+
+Como vemos, existen pocas sospechas de que algún valor esté fuera de rango. **(COMO MUCHO VER SI AGRUPAMOS LOS 3, 4, 5, 6 Y 9 DE PARCH, 5 Y 6 DE SIBSP, ETC).**
+
+Para las variables numéricas, usaremos la convención de identificar valores extremos como aquellos que se desvíen más de 1.5 IQR (rango intercuartiles) del primer y tercer cuartil respectivamente. En caso de encontrar algún valor atípico, se aplicará un floor y un cap (valores máximos y mínimos aceptados) que serán, respectivamente, $floor = Q1 - 1.5*IQR$ y $cap = Q3 + 1.5*IQR$. Identificaremos estos outliers de forma visual con un diagrama de tipo boxplot, y también realizaremos el cálculo para mayor seguridad. Otra opción podría ser la de normalizar la variable de manera que se distribuya siguiendo una normal $N(0, 1)$. De esta manera, también se eliminarían los outliers.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+boxplot(titanic$Age, main = "Boxplot - Age", ylab = "Age")
+boxplot(titanic$Fare, main = "Boxplot - Fare", ylab = "Age")
+
+```
+
+Como se puede observar, en ambas variables encontramos valores extremos por encima de la media. Vemos a continuación las listas de dichos valores. Además, realizamos la transformación cap y floor correspondiente en cada caso.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+IQR_age = quantile(titanic$Age)[4] - quantile(titanic$Age)[2]
+IQR_fare = quantile(titanic$Fare)[4] - quantile(titanic$Fare)[2]
+
+floor_age = quantile(titanic$Age)[2] - (1.5 * IQR_age)
+floor_fare = quantile(titanic$Fare)[2] - (1.5 * IQR_fare)
+
+cap_age = quantile(titanic$Age)[4] + (1.5 * IQR_age)
+cap_fare = quantile(titanic$Fare)[4] + (1.5 * IQR_fare)
+
+titanic[titanic$Age < floor_age | titanic$Age > cap_age, "Age"]
+titanic[titanic$Fare < floor_fare | titanic$Fare > cap_fare, "Fare"]
+
+titanic[titanic$Age < floor_age, "Age"] = floor_age
+titanic[titanic$Fare < floor_fare, "Fare"] = floor_fare
+
+titanic[titanic$Age > cap_age, "Age"] = cap_age
+titanic[titanic$Fare > cap_fare, "Fare"] = cap_fare
+
+```
+
+Para comprobar, volvemos a dibujar los boxplot y observamos que ya no existen valores extremos en estas variables.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+boxplot(titanic$Age, main = "Boxplot - Age", ylab = "Age")
+boxplot(titanic$Fare, main = "Boxplot - Fare", ylab = "Age")
+
+```
+
 # Análisis de los datos
 ## Selección de los grupos de datos de interés
 ## Comprobación de la normalidad y homogeneidad de la varianza
