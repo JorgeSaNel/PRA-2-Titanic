@@ -69,21 +69,20 @@ Debido a que en esta práctica no se van a utilizar modelos de predicción, se h
 
 * **PassengerId**: Identificador único del pasajero. Tipo de dato: **integer**.
 * **Survived**: Código que identifica si la persona sobrevivió al accidente del Titanic en 1912. Los dos valores que admite esta variable son 0, si la persona no sobrevivió, o 1 en caso contrario. El tipo de dato es un **integer**.
-* **Pclass**: Código que identifica la clase en la que viajaba el pasajero. Los valores posibles son;'1', correspondiente a primera clase. '2', clase media. '3', clase baja. El tipo de dato es un **varchar**.
+* **Pclass**: Código que identifica la clase en la que viajaba el pasajero. Los valores posibles son;'1', correspondiente a primera clase. '2', clase media. '3', clase baja. El tipo de dato es un **integer**.
 * **Name**: Variable descriptiva que indica el nombre de la persona. Esta variable es una cadena de caracteres del tipo **varchar**.
 * **Sex**: Código que identifica el sexo de la persona. Los valores posibles son 'male', si la persona era un hombre, o 'female', si la persona era una mujer. El tipo de dato es un **varchar**.
 * **Age**: Número que identifica la edad del pasajero. Esta variable es de tipo **numeric**.
 * **SibSp**: Número de hermanos o cónyuges que tenía el pasajero a bordo. Esta variable es de tipo **integer**.
-* **Parch**: Número de padres o hijos que tenía cada pasajero a bordo. Esta variable es de tipo **varchar**.
+* **Parch**: Número de padres o hijos que tenía cada pasajero a bordo. Esta variable es de tipo **integer**.
 * **Ticket**: Identificador del ticket del pasajero. Esta variable es de tipo **varchar**.
-* **Fare**: Tarifa del pasajero para subir a bordo. Esta variable, aunque el sentido común indica que debería ser un float, R lo lee como un **varchar**
+* **Fare**: Tarifa del pasajero para subir a bordo. Esta variable, aunque el sentido común indica que debería ser un float, R lo lee como un **numeric**
 * **Cabin**: Identificador de la cabina del pasajero. Esta variable es de tipo **varchar**.
 * **Embarked**: Código de embarque del pasajero. Esta variable tiene los siguientes tres valores posibles; 'C' = Cherbourg, 'Q' = Queenstown, 'S' = Southampton. La variable es de tipo **varchar**.
 
 Para comprobar que las vairables descritas tienen el formato correcto, se procede a leer el fichero y mostrar, con la función 'str', el tipo de dato de cada variable:
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-
 # Cargamos los paquetes R que vamos a usar
 library(ggplot2)
 library(dplyr)
@@ -94,10 +93,10 @@ test <- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
 train <- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
 
 # Unimos los dos conjuntos de datos en uno solo
-titanic <- bind_rows(train, test)
+titanic_file <- bind_rows(train, test)
 
 # Verificamos la estructura del conjunto de datos
-str(titanic)
+str(titanic_file)
 
 ```
 
@@ -132,8 +131,8 @@ En primer lugar, identificamos aquellos atributos que tengan valores vacíos. Se
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-colSums(is.na(titanic))
-colSums(titanic=="")
+colSums(is.na(titanic_file))
+colSums(titanic_file=="")
 
 ```
 
@@ -143,7 +142,7 @@ Para empezar, como ya comentábamos, la variable Cabin no aporta conocimiento de
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-titanic$Cabin <- NULL
+titanic_file$Cabin <- NULL
 
 ```
 
@@ -151,7 +150,7 @@ La variable de la edad contiene 263 valores vacíos. En principio, imputar los m
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-dens <- density(titanic[!is.na(titanic$Age), "Age"])
+dens <- density(titanic_file[!is.na(titanic_file$Age), "Age"])
 
 n <- length(dens$y)                       #$
 dx <- mean(diff(dens$x))                  # Typical spacing in x $
@@ -178,7 +177,7 @@ Dado que se trata de un porcentaje considerable de missing values (263 / 1309), 
 
 # Clase 1
 
-dens <- density(titanic[!is.na(titanic$Age) & titanic$Pclass == 1, "Age"])
+dens <- density(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 1, "Age"])
 
 n <- length(dens$y)                       #$
 dx <- mean(diff(dens$x))                  # Typical spacing in x $
@@ -197,7 +196,7 @@ mapply(function(x,y,c) lines(c(x,x), c(0,y), lwd=2, col=c), c(x.mean, x.med), c(
 
 # Clase 2
 
-dens <- density(titanic[!is.na(titanic$Age) & titanic$Pclass == 2, "Age"])
+dens <- density(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 2, "Age"])
 
 n <- length(dens$y)                       #$
 dx <- mean(diff(dens$x))                  # Typical spacing in x $
@@ -216,7 +215,7 @@ mapply(function(x,y,c) lines(c(x,x), c(0,y), lwd=2, col=c), c(x.mean, x.med), c(
 
 # Clase 3
 
-dens <- density(titanic[!is.na(titanic$Age) & titanic$Pclass == 3, "Age"])
+dens <- density(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 3, "Age"])
 
 n <- length(dens$y)                       #$
 dx <- mean(diff(dens$x))                  # Typical spacing in x $
@@ -244,21 +243,19 @@ Por último, nos encontramos con una densidad para la clase 3 más escorada, y c
 Como sospechábamos, la edad del viajero sí que parece guardar relación con la clase en la que viaje. Utilizaremos las medianas de cada submuestra para imputar los valores nulos de sus observaciones.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-
-titanic[is.na(titanic$Age) & titanic$Pclass == 1, "Age"] = median(titanic[!is.na(titanic$Age) & titanic$Pclass == 1, "Age"])
-titanic[is.na(titanic$Age) & titanic$Pclass == 2, "Age"] = median(titanic[!is.na(titanic$Age) & titanic$Pclass == 2, "Age"])
-titanic[is.na(titanic$Age) & titanic$Pclass == 3, "Age"] = median(titanic[!is.na(titanic$Age) & titanic$Pclass == 3, "Age"])
-
+titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 1, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 1, "Age"])
+titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 2, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 2, "Age"])
+titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 3, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 3, "Age"])
 ```
 
 Encontramos un valor vacío para la variable Fare y dos valores vacíos para la variable Embarked. Al ser números muy reducidos, podemos utilizar la estrategia de imputarlos con la moda (valor que más aparece) para la variable Embarked y la media para la variable Fare sin preocuparnos de introducir sesgos en el conjunto de datos.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-titanic[is.na(titanic$Fare), "Fare"] = mean(titanic[!is.na(titanic$Fare), "Fare"])
+titanic_file[is.na(titanic_file$Fare), "Fare"] = mean(titanic_file[!is.na(titanic_file$Fare), "Fare"])
 
-freq <- table(titanic[!is.na(titanic$Embarked), "Embarked"])
-titanic[titanic$Embarked == "", "Embarked"] = freq[which.max(freq)]
+freq <- table(titanic_file[!is.na(titanic_file$Embarked), "Embarked"])
+titanic_file[titanic_file$Embarked == "", "Embarked"] = freq[which.max(freq)]
 
 ```
 
@@ -268,11 +265,11 @@ Para la variable Survived, al ser muy numerosas las observaciones con valores va
 
 library(VIM)
 
-mv <- titanic[, c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")]
+mv <- titanic_file[, c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")]
 
 aux_df <- kNN(mv, variable = c("Survived"), k = 10, dist_var = c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"))
 
-titanic$Survived <- aux_df$Survived
+titanic_file$Survived <- aux_df$Survived
 
 ```
 
@@ -280,8 +277,8 @@ Para terminar, observamos de nuevo la cantidad de valores vacíos. Si todo ha id
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-colSums(is.na(titanic))
-colSums(titanic=="")
+colSums(is.na(titanic_file))
+colSums(titanic_file=="")
 
 ```
 
@@ -293,11 +290,11 @@ En primer lugar, identificaremos valores fuera de rango en variables categórica
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-titanic %>% group_by(Survived) %>% count()
-titanic %>% group_by(Pclass) %>% count()
-titanic %>% group_by(SibSp) %>% count()
-titanic %>% group_by(Parch) %>% count()
-titanic %>% group_by(Embarked) %>% count()
+titanic_file %>% group_by(Survived) %>% count()
+titanic_file %>% group_by(Pclass) %>% count()
+titanic_file %>% group_by(SibSp) %>% count()
+titanic_file %>% group_by(Parch) %>% count()
+titanic_file %>% group_by(Embarked) %>% count()
 
 ```
 
@@ -307,8 +304,8 @@ Para las variables numéricas, usaremos la convención de identificar valores ex
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-boxplot(titanic$Age, main = "Boxplot - Age", ylab = "Age")
-boxplot(titanic$Fare, main = "Boxplot - Fare", ylab = "Age")
+boxplot(titanic_file$Age, main = "Boxplot - Age", ylab = "Age")
+boxplot(titanic_file$Fare, main = "Boxplot - Fare", ylab = "Age")
 
 ```
 
@@ -316,23 +313,23 @@ Como se puede observar, en ambas variables encontramos valores extremos por enci
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-IQR_age = quantile(titanic$Age)[4] - quantile(titanic$Age)[2]
-IQR_fare = quantile(titanic$Fare)[4] - quantile(titanic$Fare)[2]
+IQR_age = quantile(titanic_file$Age)[4] - quantile(titanic_file$Age)[2]
+IQR_fare = quantile(titanic_file$Fare)[4] - quantile(titanic_file$Fare)[2]
 
-floor_age = quantile(titanic$Age)[2] - (1.5 * IQR_age)
-floor_fare = quantile(titanic$Fare)[2] - (1.5 * IQR_fare)
+floor_age = quantile(titanic_file$Age)[2] - (1.5 * IQR_age)
+floor_fare = quantile(titanic_file$Fare)[2] - (1.5 * IQR_fare)
 
-cap_age = quantile(titanic$Age)[4] + (1.5 * IQR_age)
-cap_fare = quantile(titanic$Fare)[4] + (1.5 * IQR_fare)
+cap_age = quantile(titanic_file$Age)[4] + (1.5 * IQR_age)
+cap_fare = quantile(titanic_file$Fare)[4] + (1.5 * IQR_fare)
 
-titanic[titanic$Age < floor_age | titanic$Age > cap_age, "Age"]
-titanic[titanic$Fare < floor_fare | titanic$Fare > cap_fare, "Fare"]
+titanic_file[titanic_file$Age < floor_age | titanic_file$Age > cap_age, "Age"]
+titanic_file[titanic_file$Fare < floor_fare | titanic_file$Fare > cap_fare, "Fare"]
 
-titanic[titanic$Age < floor_age, "Age"] = floor_age
-titanic[titanic$Fare < floor_fare, "Fare"] = floor_fare
+titanic_file[titanic_file$Age < floor_age, "Age"] = floor_age
+titanic_file[titanic_file$Fare < floor_fare, "Fare"] = floor_fare
 
-titanic[titanic$Age > cap_age, "Age"] = cap_age
-titanic[titanic$Fare > cap_fare, "Fare"] = cap_fare
+titanic_file[titanic_file$Age > cap_age, "Age"] = cap_age
+titanic_file[titanic_file$Fare > cap_fare, "Fare"] = cap_fare
 
 ```
 
@@ -340,17 +337,191 @@ Para comprobar, volvemos a dibujar los boxplot y observamos que ya no existen va
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-boxplot(titanic$Age, main = "Boxplot - Age", ylab = "Age")
-boxplot(titanic$Fare, main = "Boxplot - Fare", ylab = "Age")
+boxplot(titanic_file$Age, main = "Boxplot - Age", ylab = "Age")
+boxplot(titanic_file$Fare, main = "Boxplot - Fare", ylab = "Age")
 
+```
+
+Adicionalmente, se cambia la variable Sexo para que aparezca con un valor de 1 o 2, siendo:
+
+* Si la persona era de sexo masculino, 'male', se le asignará un 1.
+* Si la persona era de sexo femenino, 'female', se le asignará un 2.
+
+```{r message= FALSE, warning=FALSE}
+titanic_file$Sex <- ifelse(titanic_file$Sex == "male", 1, 2)
+
+# Mostramos los 5 primeros valores para saber que se ha definido bien la nueva variable
+head(titanic_file, 5)
 ```
 
 # Análisis de los datos
 ## Selección de los grupos de datos de interés
+Eliminamos las variables que no son interesantes para analizar si una persona ha sobrevivido. Estas son, el nombre, el ticket, el precio, la cabina, y la puerta de embarque.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+titanic_file$Name <- NULL
+titanic_file$Ticket <- NULL
+titanic_file$Fare <- NULL
+titanic_file$Cabin <- NULL
+titanic_file$Embarked <- NULL
+
+str(titanic_file)
+```   
+
+
 ## Comprobación de la normalidad y homogeneidad de la varianza
-## Pruebas estadísticas para comparar los grupos de datos
+
+### Normalidad
+Para la comprobación de que los valores que toman nuestras variables cuantitativas provienen de una población distribuida normalmente, utilizaremos la prueba de normalidad de Anderson-Darling.
+
+Así, se comprueba que para que cada prueba se obtiene un p-valor superior al nivel de significación prefijado $\alpha = 0.05$. Si esto se cumple, entonces se considera que variable en cuestión sigue una distribución normal. 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(nortest)
+alpha = 0.05
+col.names = colnames(titanic_file)
+
+for (i in 1:ncol(titanic_file)) {
+  if (i == 1) cat("Variables que no siguen una distribución normal:\n")
+  
+  if (is.integer(titanic_file[,i]) | is.numeric(titanic_file[,i])) {
+    p_val = ad.test(titanic_file[,i])$p.value
+    if (p_val < alpha) {
+      cat(col.names[i])
+        
+      # Format output
+      if (i < ncol(titanic_file) - 1) cat(", ")
+      if (i %% 3 == 0) cat("\n")
+    }
+  }
+}
+```  
+Observamos que ninguna variable sigue una distribución normal.
+
+### Homogeneidad
+Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación de un test de Fligner-Killeen. En este caso, estudiaremos esta homogeneidad en cuanto a los grupos conformados por los vehículos que presentan un motor turbo frente a un motor estándar. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son iguales.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+fligner.test(Survived ~ Pclass, data = titanic_file)
+fligner.test(Survived ~ Sex, data = titanic_file)
+fligner.test(Survived ~ Age, data = titanic_file)
+fligner.test(Survived ~ SibSp, data = titanic_file)
+fligner.test(Survived ~ Parch, data = titanic_file)
+```
+Puesto que obtenemos un p-valor superior a 0.05 para la variable Edad, 'Age', aceptamos la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
+
+## Pruebas estadísticas
+
+### Correlaciones
+En primer lugar, procedemos a realizar un análisis de correlación entre las distintas variables para determinar cuáles de ellas ejercen una mayor influencia sobre la probabilidad de sobrevivir al accidente.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggcorrplot)
+corr_norm <- cor(titanic_file)
+
+ggcorrplot(corr_norm, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, 
+           method="circle", 
+           colors = c("tomato2", "white", "springgreen3"), 
+           title="Correlación con datos Normalizados de Titanic", 
+           ggtheme=theme_dark) + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos observar que la variable que más correlación tiene con las personas que han sobrevivido el el Sexo, con una correlación de 0.44 sobre 1.
+
+### Hipótesis
+
+¿Tienen más probabilidades de sobrevivir al accidente del titanic los chicos que las chicas?
+
+La segunda prueba estadística que se aplicará consistirá en un contraste de hipótesis sobre dos muestras para determinar si el la probabilidad de sobrevivir es mayor dependiendo del sexo. Para ello, tendremos dos muestras: la primera de ellas se corresponderá con todas las personas y, la segunda, con aquellos que eran hombres.
+
+Se debe destacar que un test paramétrico como el que a continuación se utiliza necesita que los datos sean normales, si la muestra es de tamaño inferior a 30. Como en nuestro caso, n > 30, el contraste de hipótesis siguiente es válido (aunque podría utilizarse un test no paramétrico como el de Mann-Whitney, que podría resultar ser más eficiente para este caso).
+
+Así, se plantea el siguiente contraste de hipótesis de dos muestras sobre la diferencia de medias, el cual es unilateral atendiendo a la formulación de la hipótesis alternativa:
+
+<center>$H_{0}: \mu_{1} = \mu_{2}$</center>
+<center>$H_{1}: \mu_{1} > \mu_{2}$</center>
+
+donde μ1 es la media de la población de la que se extrae la primera muestra y μ2 es la media de la población de la que extrae la segunda. 
+
+```{r message= FALSE, warning=FALSE}
+titanic_file_hombres <- titanic_file[titanic_file$Sex == 1, ]
+```
+
+```{r message= FALSE, warning=FALSE}
+t.test(titanic_file, titanic_file_hombres, alternative = "greater")
+```
+
+Puesto que obtenemos un p-valor mayor que el valor de significación fijado, aceptamos la hipótesis nula. Por tanto, no podemos concluir que los chicos sobreviviesen más que las chicas, sino que fue por igual.
+
+### Regresión Lineal
+Se realiza el modelo de regresión lineal. Se empieza metiendo en el modelo la variable más correlacionada, el sexo, y se irá probando a añadir nuevas variables para ver si el modelo mejora o empeora.
+
+```{r message= FALSE, warning=FALSE}
+regresion_sexo <- lm(Survived ~ Sex, data = titanic_file)
+summary(regresion_sexo)
+```
+Se puede observar que el coeficiente de determinación es __Multiple R-squared: 0.193__. Esto quiere decir que un 19.3% del modelo tiene relación entre el la supervivencia y el sexo.
+
+Puesto que este valor es muy bajo, se añade la segunda variable más correlacionada al modelo para ver si mejora.
+```{r message= FALSE, warning=FALSE}
+regresion_mltp <- lm(Survived ~ Sex + Pclass, data = titanic_file)
+summary(regresion_mltp)
+```
+Observamos que el modelo ha mejorado considerablemente, consiguiendo un **Multiple R-squared:  0.2943**.
+```{r message= FALSE, warning=FALSE}
+regresion_mltp_3 <- lm(Survived ~ Sex + Pclass + Age, data = titanic_file)
+summary(regresion_mltp_3)
+```
+Añadiendo una nueva variable, el modelo mejora a un 0.32 de $R^{2}$. Podemos comprobar que el modelo no mejora al añadir nuevas variables:
+```{r message= FALSE, warning=FALSE}
+regresion_mltp_5 <- lm(Survived ~ Sex + Pclass + Age + SibSp + Parch, data = titanic_file)
+summary(regresion_mltp_5)
+```
+Vemos que al añadir estas dos nuevas variables, el modelo se mantiene, por lo que revertimos a la versión anterior y dejamos esta por buena.
+
+### Regresión logarítmia
+Adicionalmente, se crea un modelo logarítmico para ver si hay mejora. En este caso, al tener variables dicotómicas, tiene más sentido utilizar un modelo logarítmico.
+
+```{r message= FALSE, warning=FALSE}
+regresion_lg <- glm(Survived ~ Sex, data = titanic_file, family = "binomial")
+summary(regresion_lg)
+```
+
+```{r message= FALSE, warning=FALSE}
+regresion_lg <- glm(Survived ~ Sex + Pclass, data = titanic_file, family = "binomial")
+summary(regresion_lg)
+```
+
+
+```{r message= FALSE, warning=FALSE}
+regresion_lg <- glm(Survived ~ Sex + Pclass + Age, data = titanic_file, family = "binomial")
+summary(regresion_lg)
+```
+
+Observamos que el modelo es mejor con estas tres variables, puesto que el valor de AIC es el más bajo de las tres regresiones realizadas.
+
+### Predicciones
+Ahora podemos predecir si una persona sobrevivió al accidente con los modelos creados, el lineal y el logaritmico:
+
+```{r message= FALSE, warning=FALSE}
+newdata <- data.frame(
+  Pclass = 1,
+  Sex = 2,
+  Age = 25
+)
+
+# Predecir la supervivencia con el modelo lineal
+predict(regresion_mltp_3, newdata)
+# Predecir la supervivencia con el modelo logaritmico
+predict(regresion_lg, newdata)
+```
+** POR QUE SALE UN VALOR DE DOS PARA EL MODELO LOGARITMICO???? **
 
 # Representación gráfica de los resultados
+
+** QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI?? **
 
 # Conclusiones del análisis
 
