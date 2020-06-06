@@ -193,6 +193,22 @@ colSums(titanic_file=="")
 
 Observamos dos tipos de missing values: valores con NA y valores con cadenas vacías. A efectos prácticos, serán tratados de igual forma unos y otros.
 
+Antes de comenzar, analizaremos también la existencia de ceros en las variables continuas, y nos plantearemos si tiene sentido que existan o si debemos tratarlos como valores vacíos. Estudiaremos las variables Age y Fare.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+colSums(titanic_file[, c("Age", "Fare")] == 0)
+
+```
+
+Encontramos ceros en la variable Fare. A priori, es una variable en la que no tiene sentido la existencia de ceros. Es esperable que todos los pasajeros hayan pagado un precio por su billete, por lo que consideramos que estos datos deberán tratarse como valores vacíos y serán incluidos en el tratamiento.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+titanic_file[which(titanic_file$Fare == 0), "Fare"] = NA
+
+```
+
 Para empezar, como ya comentábamos, la variable Cabin no aporta conocimiento de las personas que sobrevivieron. Es una cadena de caracteres que ni siquiera tiene categorías o valores predeterminados, por lo que no es interesante para el análisis. Eliminamos dicha variable.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -298,23 +314,37 @@ Por último, nos encontramos con una densidad para la clase 3 más escorada, y c
 Como sospechábamos, la edad del viajero sí que parece guardar relación con la clase en la que viaje. Utilizaremos las medianas de cada submuestra para imputar los valores nulos de sus observaciones.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
+
 titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 1, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 1, "Age"])
 titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 2, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 2, "Age"])
 titanic_file[is.na(titanic_file$Age) & titanic_file$Pclass == 3, "Age"] = median(titanic_file[!is.na(titanic_file$Age) & titanic_file$Pclass == 3, "Age"])
+
 ```
 
-Encontramos un valor vacío para la variable Fare y dos valores vacíos para la variable Embarked. Al ser números muy reducidos, podemos utilizar la estrategia de imputarlos con la moda (valor que más aparece) para la variable Embarked y la media para la variable Fare sin preocuparnos de introducir sesgos en el conjunto de datos.
+Para la variable Fare, hacemos el mismo análisis para ver su distribución y determinar si la media o la mediana pueden ser buenos valores para sustituir el valor faltante.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-titanic_file[is.na(titanic_file$Fare), "Fare"] = mean(titanic_file[!is.na(titanic_file$Fare), "Fare"])
+dens <- density(titanic_file[!is.na(titanic_file$Fare), "Fare"])
 
-freq <- table(titanic_file[!is.na(titanic_file$Embarked), "Embarked"])
-titanic_file[titanic_file$Embarked == "", "Embarked"] = freq[which.max(freq)]
+n <- length(dens$y)                       #$
+dx <- mean(diff(dens$x))                  # Typical spacing in x $
+y.unit <- sum(dens$y) * dx                # Check: this should integrate to 1 $
+dx <- dx / y.unit                         # Make a minor adjustment
+x.mean <- sum(dens$y * dens$x) * dx
+y.mean <- dens$y[length(dens$x[dens$x < x.mean])] #$
+x.mode <- dens$x[i.mode <- which.max(dens$y)]
+y.mode <- dens$y[i.mode]                  #$
+y.cs <- cumsum(dens$y)                    #$
+x.med <- dens$x[i.med <- length(y.cs[2*y.cs <= y.cs[n]])] #$
+y.med <- dens$y[i.med] 
+
+plot(dens, col = "blue", main="Densidad - Fare")
+mapply(function(x,y,c) lines(c(x,x), c(0,y), lwd=2, col=c), c(x.mean, x.med), c(y.mean, y.med), c("green", "red"))
 
 ```
 
-Para la variable Survived, al ser muy numerosas las observaciones con valores vacíos (lo cual significa que el riesgo de introducir sesgos al imputar mal los datos es grande), utilizaremos un método algo más sofisticado. Seleccionaremos las 10 observaciones más "próximas" y usaremos el valor de dichas observaciones (moda para variables categóricas, media para variables continuas) para imputar nuestros missing values. Este método se conoce como el de los k vecinos más próximos. Usaremos la función kNN del paquete VIM de R con $k = 10$.
+Como se puede observar, la variable Fare está lejos de distribuirse de forma normal. Usar medidas estadísticas como la media o la mediana no sería la estrategia más acertada. Es de esperar que el valor de esta variable esté relacionado con otras de las del conjunto de datos, como puede ser la clase en la que se viaja, el puerto en el que se embarca, la edad, etc. Es por eso que lo más adecuado para imputar esta variable sería utilizar el algoritmo de vecinos próximos. Seleccionaremos las 10 observaciones más "próximas" en función de la distancia entre las variables observadas y usaremos el valor de dichas observaciones (media para variables continuas) para imputar nuestros missing values. Usaremos la función kNN del paquete VIM de R con $k = 10$.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -322,13 +352,24 @@ library(VIM)
 
 mv <- titanic_file[, c("Survived", "Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked")]
 
-aux_df <- kNN(mv, variable = c("Survived"), k = 10, dist_var = c("Pclass", "Sex", "Age", "SibSp", "Parch", "Fare", "Embarked"))
+aux_df <- kNN(mv, variable = c("Fare"), k = 10, dist_var = c("Pclass", "Sex", "Age", "SibSp", "Parch", "Survived", "Embarked"))
 
-titanic_file$Survived <- aux_df$Survived
+titanic_file$Fare <- aux_df$Fare
 
 ```
 
-Para terminar, observamos de nuevo la cantidad de valores vacíos. Si todo ha ido bien, ya no deberíamos ver ninguno.
+Encontramos dos valores vacíos para la variable Embarked. Al ser números muy reducidos y tratarse de una variable categórica, podemos utilizar la estrategia de imputarlos con la moda (valor que más aparece) sin preocuparnos de introducir sesgos en el conjunto de datos.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+uv <- unique(titanic_file$Embarked)
+titanic_file[is.na(titanic_file$Embarked) | titanic_file$Embarked == "", "Embarked"] = uv[which.max(tabulate(match(titanic_file$Embarked, uv)))]
+
+```
+
+En el caso de la variable Survived, quizá no tenga sentido imputar estas observaciones vacías, ya que se trata de la variable objetivo. Son precisamente estos valores faltantes los que trataremos de predecir cuando construyamos un modelo sobre este conjunto de datos.
+
+Para terminar, observamos de nuevo la cantidad de valores vacíos. Si todo ha ido bien, ya no deberíamos ver ninguno (a excepción de la variable Survived, naturalmente).
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -357,6 +398,8 @@ Como vemos, existen pocas sospechas de que algún valor esté fuera de rango. **
 
 Para las variables numéricas, usaremos la convención de identificar valores extremos como aquellos que se desvíen más de 1.5 IQR (rango intercuartiles) del primer y tercer cuartil respectivamente. En caso de encontrar algún valor atípico, se aplicará un floor y un cap (valores máximos y mínimos aceptados) que serán, respectivamente, $floor = Q1 - 1.5*IQR$ y $cap = Q3 + 1.5*IQR$. Identificaremos estos outliers de forma visual con un diagrama de tipo boxplot, y también realizaremos el cálculo para mayor seguridad. Otra opción podría ser la de normalizar la variable de manera que se distribuya siguiendo una normal $N(0, 1)$. De esta manera, también se eliminarían los outliers.
 
+Sin embargo, discutiremos si los outliers encontrados son valores realmente erróneos o si por el contrario se encuentran en el rango esperable para cada variable. Por ejemplo, sería evidente que una edad de 150 años es un outlier y habría que transformarlo. Pero quizá una edad de 90 no lo sea, y aún así esté siendo identificado como outlier por nuestro método al existir pocas observaciones de personas con 90 años.
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
 boxplot(titanic_file$Age, main = "Boxplot - Age", ylab = "Age")
@@ -364,7 +407,7 @@ boxplot(titanic_file$Fare, main = "Boxplot - Fare", ylab = "Age")
 
 ```
 
-Como se puede observar, en ambas variables encontramos valores extremos por encima de la media. Vemos a continuación las listas de dichos valores. Además, realizamos la transformación cap y floor correspondiente en cada caso.
+Como se puede observar, en ambas variables encontramos valores extremos por encima de la media. Vemos a continuación las listas de dichos valores. Además, si fuera procedente, realizaríamos la transformación cap y floor correspondiente en cada caso.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
@@ -377,26 +420,22 @@ floor_fare = quantile(titanic_file$Fare)[2] - (1.5 * IQR_fare)
 cap_age = quantile(titanic_file$Age)[4] + (1.5 * IQR_age)
 cap_fare = quantile(titanic_file$Fare)[4] + (1.5 * IQR_fare)
 
-titanic_file[titanic_file$Age < floor_age | titanic_file$Age > cap_age, "Age"]
-titanic_file[titanic_file$Fare < floor_fare | titanic_file$Fare > cap_fare, "Fare"]
-
-titanic_file[titanic_file$Age < floor_age, "Age"] = floor_age
-titanic_file[titanic_file$Fare < floor_fare, "Fare"] = floor_fare
-
-titanic_file[titanic_file$Age > cap_age, "Age"] = cap_age
-titanic_file[titanic_file$Fare > cap_fare, "Fare"] = cap_fare
+sort(titanic_file[titanic_file$Fare < floor_fare | titanic_file$Fare > cap_fare, "Fare"])
+sort(titanic_file[titanic_file$Age < floor_age | titanic_file$Age > cap_age, "Age"])
 
 ```
 
+En las listas de datos proporcionadas (ordenadas de mayor a menor), se puede apreciar que el valor máximo para la edad es de 80 años, lo cual es más que posible que se trate de un valor correcto, y que por tanto no debemos transformar. Siguiendo el mismo razonamiento, el resto de valores también permanecerán intactos.
 
-Para comprobar, volvemos a dibujar los boxplot y observamos que ya no existen valores extremos en estas variables.
+Por parte de la variable Fare, encontramos varios valores inusualmente altos. Se trata de un precio de billete por encima de los 500 dólares. Es sospechoso, pero encontramos 4 observaciones distintas con exactamente el mismo precio. Esto nos sugiere que perfectamente se puede tratar de un billete de lujo. De ser así, debería tratarse de un viajero de primera clase. Es una comprobación muy superficial, pero nos indicará si nuestra hipótesis va por buen camino o no.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-boxplot(titanic_file$Age, main = "Boxplot - Age", ylab = "Age")
-boxplot(titanic_file$Fare, main = "Boxplot - Fare", ylab = "Age")
+titanic_file[titanic_file$Fare == max(titanic_file$Fare), c("Pclass", "Fare")]
 
 ```
+
+Como sospechábamos, se trata de viajeros de primera clase. Esto sumado a que los cuatro contienen el mismo valor en la variable Fare nos lleva a pensar que es un valor correcto, por lo que no deberemos transformarlo tampoco.
 
 # Análisis de los datos
 ## Selección de los grupos de datos de interés
