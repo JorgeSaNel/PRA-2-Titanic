@@ -10,7 +10,7 @@ output:
     toc: yes
     toc_depth: 2
     includes:
-      in_header: 75.584-PEC-header.html
+      in_header: cabecera.html
   word_document: default
   pdf_document:
     highlight: zenburn
@@ -34,7 +34,17 @@ y análisis de las mismas. Esta práctica ha sido realizada en un grupo de dos f
 * [Jorge Santos Neila](https://github.com/JorgeSaNel)
 * [Javier Cela López](https://github.com/javcela10)
 
-Asimismo, el código se ha subido al repositorio de [GitHub](https://github.com/JorgeSaNel/PRA-2-Titanic) y es de uso **METER AQUI SI ES CÖDIGO LIBRE Y POR QUÉ**
+Asimismo, el código se ha subido al repositorio de [GitHub](https://github.com/JorgeSaNel/PRA-2-Titanic) y Este proyecto está bajo la licencia CC BY-NC-SA 4.0, [Atribución-NoComercial-CompartirIgual 4.0 Internacional](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode), la cual permite:
+
+* Compartir: copiar y redistribuir el material en cualquier medio o formato
+* Adaptar: remezclar, transformar y construir a partir del material
+
+Siempre y cuando se sigan los siguientes términos:
+
+* Atribución: Se debe dar crédito de manera adecuada, brindar un enlace a la licencia, e indicar si se han realizado cambios. Puede hacerlo en cualquier forma razonable, pero no de forma tal que sugiera que usted o su uso tienen el apoyo del licenciante.
+* Sin uso comercial: No puede hacer uso del material con propósitos comerciales.
+* Compartir por igual: Si remezcla, transforma o crea a partir del material, debe distribuir su contribución bajo la misma licencia del original.
+
 
 ## Objetivos
 Los objetivos que se persiguen mediante el desarrollo de esta actividad práctica son los siguientes:
@@ -65,10 +75,28 @@ El Conjunto de datos, _Dataset_ en inglés, objeto de análisis se ha obtenido a
 * Train.csv, dataset específico para entrenar el modelo de machine learning.
 * Test.csv, dataset específico para testear o probar el modelo realizado.
 
-Debido a que en esta práctica no se van a utilizar modelos de predicción, se han unificado ambos ficheros en uno, llamándolo **titanic-dataset.csv**, el cual está constituido por 12 características (columnas) que presentan 1309 personas (filas o registros). Este dataset esta compuesto por las siguientes variables:
+Para poder trabajar correctamente con todos los datos, el primer paso que se debe realizar es unificar ambos ficheros en uno sólo. Para ello se utiliza la función _bind-rows_, de la siguiente manera:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Cargamos los paquetes R que vamos a usar
+library(ggplot2)
+library(dplyr)
+
+# Guardamos el conjunto de datos test y train en un único dataset
+test <- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
+train <- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
+
+# Unimos los dos conjuntos de datos en uno solo
+titanic_file <- bind_rows(train, test)
+
+# Verificamos la estructura del conjunto de datos
+str(titanic_file)
+```
+
+Tras unificar el fichero, podemos observar que está constituido por 12 características (columnas) que presentan 1309 personas (filas o registros). Este dataset esta compuesto por las siguientes variables:
 
 * **PassengerId**: Identificador único del pasajero. Tipo de dato: **integer**.
-* **Survived**: Código que identifica si la persona sobrevivió al accidente del Titanic en 1912. Los dos valores que admite esta variable son 0, si la persona no sobrevivió, o 1 en caso contrario. El tipo de dato es un **integer**.
+* **Survived**: Código que identifica si la persona sobrevivió al accidente del Titanic en 1912. Los dos valores que admite esta variable son 0, si la persona no sobrevivió, o 1 en caso contrario. El tipo de dato es un **integer**. Esta es nuestra variable objetivo y la que queremos utilizar para predecir el modelo.
 * **Pclass**: Código que identifica la clase en la que viajaba el pasajero. Los valores posibles son;'1', correspondiente a primera clase. '2', clase media. '3', clase baja. El tipo de dato es un **integer**.
 * **Name**: Variable descriptiva que indica el nombre de la persona. Esta variable es una cadena de caracteres del tipo **varchar**.
 * **Sex**: Código que identifica el sexo de la persona. Los valores posibles son 'male', si la persona era un hombre, o 'female', si la persona era una mujer. El tipo de dato es un **varchar**.
@@ -80,46 +108,73 @@ Debido a que en esta práctica no se van a utilizar modelos de predicción, se h
 * **Cabin**: Identificador de la cabina del pasajero. Esta variable es de tipo **varchar**.
 * **Embarked**: Código de embarque del pasajero. Esta variable tiene los siguientes tres valores posibles; 'C' = Cherbourg, 'Q' = Queenstown, 'S' = Southampton. La variable es de tipo **varchar**.
 
-Para comprobar que las vairables descritas tienen el formato correcto, se procede a leer el fichero y mostrar, con la función 'str', el tipo de dato de cada variable:
+
+## Factorización de las variables
+A continuación, con el fin de tener el conjunto de datos preparado para la limpieza y análisis del mismo, se analiza qué variables tendría sentido factorizar.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-# Cargamos los paquetes R que vamos a usar
-library(ggplot2)
-library(dplyr)
-
-# Guardamos el conjunto de datos test y train en un único dataset
-# titanic <- read.csv('../dataset/titanic-dataset.csv', stringsAsFactors = FALSE)
-test <- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
-train <- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
-
-# Unimos los dos conjuntos de datos en uno solo
-titanic_file <- bind_rows(train, test)
-
-# Verificamos la estructura del conjunto de datos
-str(titanic_file)
-
+apply(titanic_file,2, function(x) length(unique(x)))
 ```
+
+La factorización tiene sentido realizarla sobre variables que tienen pocas clases, como son en este caso las variables 'Survived', 'Pclass', 'Sex' o 'Embarked'. Podemos observar que las variables survived y embarked tienen una clase más que las mencionadas en en análisis del dataset. Esto es debido a que, seguramente, tenga algún registro vacío o nulo. Es necesario realizar un pre-análisis de limpieza del conjunto de datos antes de proceder con el modelo. Este apartado se realizará más adelante. Dicho lo cual, se procede a factorizar las variables mencionadas:
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Discretizamos las variables con pocas clases
+cols<-c("Survived","Pclass","Sex","Embarked")
+for (i in cols){
+  titanic_file[,i] <- as.factor(titanic_file[,i])
+}
+
+# Después de los cambios, analizamos la nueva estructura del conjunto de datos
+str(titanic_file)
+```
+
+Se observa que las cuatro variables se han factorizado correctamente.
+
+## Estudio del fichero
+A continuación, con el fin de ampliar información sobre el conjunto de datos del fichero, se procede a hacer una representación de los mismos en torno a nuestra variable objetivo, la supervivencia al accidente, variable 'Survived'. No obstante, esta representación se hace sobre fichero _train.csv_, ya que el fichero test no tiene la variable objetivo representada puesto que es la variable que se quiere predecir.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+filas=dim(train)[1]
+ggplot(data=titanic_file[1:filas,],aes(x=Sex,fill=Survived))+geom_bar() + ggtitle("Representación de la variable Sexo con Supervivencia") + xlab("Sexo") + ylab("Conteo Supervivencia") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos observar que en el crucero hubo casi el doble de chicos que de chicas, aunque sobrevivieron más del doble de mujeres que de hombres.
+
+A continuación se representa el número de hijos de cada familia en relación a la supervivencia:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Survivial como función de SibSp
+ggplot(data = titanic_file[1:filas,],aes(x=SibSp,fill=Survived))+geom_bar() + ggtitle("Representación de la variable Hijos con Supervivencia") + xlab("Nº de Hijos") + ylab("Conteo Supervivencia") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos observar que la gran mayoría de familias que sobrevivieron tenían, de media, menos de dos hijos. Es interesante crear una nueva variable en la que sume el total de miembros en la familia ('SibSp' + 'Parch') para entrenar nuestro modelo. Esto se hará más adelante.
+
+Por último, se muestra la distribucción de la edad de las personas en función de la supervivencia:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Survival como función de age:
+titanic_file1<-titanic_file[1:filas,]
+
+ggplot(data = titanic_file1[!(is.na(titanic_file[1:filas,]$Age)),],aes(x=Age,fill=Survived))+geom_histogram(binwidth =3) + ggtitle("Representación de la Edad con Supervivencia") + xlab("Edad") + ylab("Conteo Supervivencia") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos observar que la gran mayoría de las personas que sobrevivieron al accidente eran menores de 40 años.
 
 ## Importancia y objetivos de los análisis
 Tras este primer análisis del dataset, la siguiente pregunta que debemos hacernos es por qué es importante este conjunto de datos, y qué problema pretende responder. 
 
-A partir de este conjunto de datos se plantea la problemática de determinar qué variables influyen más sobre la probabilidad de sobrevivir en un accidente como el Titanic, como pueden ser las variables sexo, clase o edad. Además, se podrá proceder a crear modelos de regresión que permitan predecir si un pasajero ha sobrevivido o no en función de sus características y contrastes de hipótesis. Esto ayudará a identificar propiedades interesantes en las muestras que puedan ser inferidas con respecto a la población.
+A partir de este conjunto de datos se plantea la problemática de determinar qué variables influyen más sobre la posibilidad de sobrevivir a un accidente como el Titanic, como pueden ser las variables sexo, clase o edad. Además, se podrá proceder a crear modelos de aprendizaje (regresión logarítmica o árbol de decisión) que permitan predecir si un pasajero ha sobrevivido o no en función de sus características y contrastes de hipótesis. Esto ayudará a identificar propiedades interesantes en las muestras que puedan ser inferidas con respecto a la población.
 
 Estos análisis adquieren una gran relevancia ya que nos permite conocer cómo eran las clases sociales de hace 100 años, se puede estudiar su correlación, y evitar así posibles inconsistencias entre clases sociales para los futuros cruceros o eventos, como conseguir que todos tengan la misma probabilidad de sobrevivir independientemente de la situación del pasajero o del dinero que este tenga.
 
 # Integración y selección de los datos
-A lo largo de este apartado se dará respuesta a las variables que son interesantes analizar para encontrar la posibilidad de que un pasajero sobreviva al accidente. Podemos dejar fuera todas las variables que, a priori, no tiene relación con la variable objetivo (sobrevivir al accidente), como podrían ser 'Name, 'Cabin' o 'Embarked'. Estas variables, al ser identificadores, no ayudan al modelo. Dicho con otras palabras, no habrá correlación entre estas variables y la posibilidad de sobrevivir. 
+A lo largo de este apartado se dará respuesta a las variables que son interesantes analizar para encontrar la posibilidad de que un pasajero sobreviva al accidente. Podemos dejar fuera todas las variables que, a priori, no tiene relación con la variable objetivo (sobrevivir al accidente), como podrían ser 'PassengerId', 'Name, 'Cabin' o 'Embarked'. Estas variables, al ser identificadores, no ayudan al modelo. Dicho con otras palabras, no habrá correlación entre estas variables y la posibilidad de sobrevivir. 
 
 Por otro lado, las variables que sí se analizarán son:
 
 * 'Survived' para conocer si el pasajero sobrevivió o no. Esta variable será, en un modelo supervisado, nuestra variable objetivo a predecir.
 * A su vez, será interesante conocer si las variables 'Pclass', 'Sex', 'Age', 'SibSp', 'Parch' o 'Fare' tiene correlación con la variable clase. 
 
-Adicionalmente, la variable que queda por comentar es el Identificador único del pasajero, PassengerId'. Esta variable, aunque no va a tener relación con la variable objetivo, está bien dejarla en el análisis ya que es la única que nos permite tener identificado al pasajero.
-
-**NOTA: REVISAR. NO ME GUSTA EL WORDING. El ID tiene sentido dejarlo en un modelo supervisado, pero aquí si no se va a hacer, no sé si tendría sentido**
-
-**NOTA: METER MÄS VARIABLES SI CREEMOS OPORTUNo**
+**NOTA: REVISAR ESTO AL TERMINAR EL TRABAJO POR SI NOS HEMOS DEJADO ALGO**
 
 # Limpieza de los datos
 
@@ -333,6 +388,7 @@ titanic_file[titanic_file$Fare > cap_fare, "Fare"] = cap_fare
 
 ```
 
+
 Para comprobar, volvemos a dibujar los boxplot y observamos que ya no existen valores extremos en estas variables.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
@@ -340,18 +396,6 @@ Para comprobar, volvemos a dibujar los boxplot y observamos que ya no existen va
 boxplot(titanic_file$Age, main = "Boxplot - Age", ylab = "Age")
 boxplot(titanic_file$Fare, main = "Boxplot - Fare", ylab = "Age")
 
-```
-
-Adicionalmente, se cambia la variable Sexo para que aparezca con un valor de 1 o 2, siendo:
-
-* Si la persona era de sexo masculino, 'male', se le asignará un 1.
-* Si la persona era de sexo femenino, 'female', se le asignará un 2.
-
-```{r message= FALSE, warning=FALSE}
-titanic_file$Sex <- ifelse(titanic_file$Sex == "male", 1, 2)
-
-# Mostramos los 5 primeros valores para saber que se ha definido bien la nueva variable
-head(titanic_file, 5)
 ```
 
 # Análisis de los datos
@@ -395,18 +439,21 @@ for (i in 1:ncol(titanic_file)) {
   }
 }
 ```  
+
 Observamos que ninguna variable sigue una distribución normal.
 
 ### Homogeneidad
 Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación de un test de Fligner-Killeen. En este caso, estudiaremos esta homogeneidad en cuanto a los grupos conformados por los vehículos que presentan un motor turbo frente a un motor estándar. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son iguales.
 
+** COMENTO A PARTIR DE AQUI PORQUE AL SER EL TIPO DE DATO DIFERENTE NO VA **
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-fligner.test(Survived ~ Pclass, data = titanic_file)
-fligner.test(Survived ~ Sex, data = titanic_file)
-fligner.test(Survived ~ Age, data = titanic_file)
-fligner.test(Survived ~ SibSp, data = titanic_file)
-fligner.test(Survived ~ Parch, data = titanic_file)
+#fligner.test(Survived ~ Pclass, data = titanic_file)
+#fligner.test(Survived ~ Sex, data = titanic_file)
+#fligner.test(Survived ~ Age, data = titanic_file)
+#fligner.test(Survived ~ SibSp, data = titanic_file)
+#fligner.test(Survived ~ Parch, data = titanic_file)
 ```
+
 Puesto que obtenemos un p-valor superior a 0.05 para la variable Edad, 'Age', aceptamos la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
 
 ## Pruebas estadísticas
@@ -415,17 +462,17 @@ Puesto que obtenemos un p-valor superior a 0.05 para la variable Edad, 'Age', ac
 En primer lugar, procedemos a realizar un análisis de correlación entre las distintas variables para determinar cuáles de ellas ejercen una mayor influencia sobre la probabilidad de sobrevivir al accidente.
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-library(ggcorrplot)
-corr_norm <- cor(titanic_file)
+#library(ggcorrplot)
+#corr_norm <- cor(titanic_file)
 
-ggcorrplot(corr_norm, hc.order = TRUE, 
-           type = "lower", 
-           lab = TRUE, 
-           lab_size = 3, 
-           method="circle", 
-           colors = c("tomato2", "white", "springgreen3"), 
-           title="Correlación con datos Normalizados de Titanic", 
-           ggtheme=theme_dark) + theme(plot.title = element_text(hjust = 0.5))
+#ggcorrplot(corr_norm, hc.order = TRUE, 
+#           type = "lower", 
+#           lab = TRUE, 
+#           lab_size = 3, 
+#           method="circle", 
+#           colors = c("tomato2", "white", "springgreen3"), 
+#           title="Correlación con datos Normalizados de Titanic", 
+#           ggtheme=theme_dark) + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 Podemos observar que la variable que más correlación tiene con las personas que han sobrevivido el el Sexo, con una correlación de 0.44 sobre 1.
@@ -446,11 +493,11 @@ Así, se plantea el siguiente contraste de hipótesis de dos muestras sobre la d
 donde μ1 es la media de la población de la que se extrae la primera muestra y μ2 es la media de la población de la que extrae la segunda. 
 
 ```{r message= FALSE, warning=FALSE}
-titanic_file_hombres <- titanic_file[titanic_file$Sex == 1, ]
+#titanic_file_hombres <- titanic_file[titanic_file$Sex == 1, ]
 ```
 
 ```{r message= FALSE, warning=FALSE}
-t.test(titanic_file, titanic_file_hombres, alternative = "greater")
+#t.test(titanic_file, titanic_file_hombres, alternative = "greater")
 ```
 
 Puesto que obtenemos un p-valor mayor que el valor de significación fijado, aceptamos la hipótesis nula. Por tanto, no podemos concluir que los chicos sobreviviesen más que las chicas, sino que fue por igual.
@@ -459,25 +506,25 @@ Puesto que obtenemos un p-valor mayor que el valor de significación fijado, ace
 Se realiza el modelo de regresión lineal. Se empieza metiendo en el modelo la variable más correlacionada, el sexo, y se irá probando a añadir nuevas variables para ver si el modelo mejora o empeora.
 
 ```{r message= FALSE, warning=FALSE}
-regresion_sexo <- lm(Survived ~ Sex, data = titanic_file)
-summary(regresion_sexo)
+#regresion_sexo <- lm(Survived ~ Sex, data = titanic_file)
+#summary(regresion_sexo)
 ```
 Se puede observar que el coeficiente de determinación es __Multiple R-squared: 0.193__. Esto quiere decir que un 19.3% del modelo tiene relación entre el la supervivencia y el sexo.
 
 Puesto que este valor es muy bajo, se añade la segunda variable más correlacionada al modelo para ver si mejora.
 ```{r message= FALSE, warning=FALSE}
-regresion_mltp <- lm(Survived ~ Sex + Pclass, data = titanic_file)
-summary(regresion_mltp)
+#regresion_mltp <- lm(Survived ~ Sex + Pclass, data = titanic_file)
+#summary(regresion_mltp)
 ```
 Observamos que el modelo ha mejorado considerablemente, consiguiendo un **Multiple R-squared:  0.2943**.
 ```{r message= FALSE, warning=FALSE}
-regresion_mltp_3 <- lm(Survived ~ Sex + Pclass + Age, data = titanic_file)
-summary(regresion_mltp_3)
+#regresion_mltp_3 <- lm(Survived ~ Sex + Pclass + Age, data = titanic_file)
+#summary(regresion_mltp_3)
 ```
 Añadiendo una nueva variable, el modelo mejora a un 0.32 de $R^{2}$. Podemos comprobar que el modelo no mejora al añadir nuevas variables:
 ```{r message= FALSE, warning=FALSE}
-regresion_mltp_5 <- lm(Survived ~ Sex + Pclass + Age + SibSp + Parch, data = titanic_file)
-summary(regresion_mltp_5)
+#regresion_mltp_5 <- lm(Survived ~ Sex + Pclass + Age + SibSp + Parch, data = titanic_file)
+#summary(regresion_mltp_5)
 ```
 Vemos que al añadir estas dos nuevas variables, el modelo se mantiene, por lo que revertimos a la versión anterior y dejamos esta por buena.
 
@@ -485,19 +532,19 @@ Vemos que al añadir estas dos nuevas variables, el modelo se mantiene, por lo q
 Adicionalmente, se crea un modelo logarítmico para ver si hay mejora. En este caso, al tener variables dicotómicas, tiene más sentido utilizar un modelo logarítmico.
 
 ```{r message= FALSE, warning=FALSE}
-regresion_lg <- glm(Survived ~ Sex, data = titanic_file, family = "binomial")
-summary(regresion_lg)
+#regresion_lg <- glm(Survived ~ Sex, data = titanic_file, family = "binomial")
+#summary(regresion_lg)
 ```
 
 ```{r message= FALSE, warning=FALSE}
-regresion_lg <- glm(Survived ~ Sex + Pclass, data = titanic_file, family = "binomial")
-summary(regresion_lg)
+#regresion_lg <- glm(Survived ~ Sex + Pclass, data = titanic_file, family = "binomial")
+#summary(regresion_lg)
 ```
 
 
 ```{r message= FALSE, warning=FALSE}
-regresion_lg <- glm(Survived ~ Sex + Pclass + Age, data = titanic_file, family = "binomial")
-summary(regresion_lg)
+#regresion_lg <- glm(Survived ~ Sex + Pclass + Age, data = titanic_file, family = "binomial")
+#summary(regresion_lg)
 ```
 
 Observamos que el modelo es mejor con estas tres variables, puesto que el valor de AIC es el más bajo de las tres regresiones realizadas.
@@ -506,16 +553,16 @@ Observamos que el modelo es mejor con estas tres variables, puesto que el valor 
 Ahora podemos predecir si una persona sobrevivió al accidente con los modelos creados, el lineal y el logaritmico:
 
 ```{r message= FALSE, warning=FALSE}
-newdata <- data.frame(
-  Pclass = 1,
-  Sex = 2,
-  Age = 25
-)
+#newdata <- data.frame(
+#  Pclass = 1,
+#  Sex = 2,
+#  Age = 25
+#)
 
 # Predecir la supervivencia con el modelo lineal
-predict(regresion_mltp_3, newdata)
+#predict(regresion_mltp_3, newdata)
 # Predecir la supervivencia con el modelo logaritmico
-predict(regresion_lg, newdata)
+#predict(regresion_lg, newdata)
 ```
 ** POR QUE SALE UN VALOR DE DOS PARA EL MODELO LOGARITMICO???? **
 
