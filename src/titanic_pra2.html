@@ -439,6 +439,7 @@ summary {
 <li><a href="#comprobación-de-la-normalidad-y-homogeneidad-de-la-varianza"><span class="toc-section-number">5.2</span> Comprobación de la normalidad y homogeneidad de la varianza</a><ul>
 <li><a href="#normalidad"><span class="toc-section-number">5.2.1</span> Normalidad</a></li>
 <li><a href="#homogeneidad"><span class="toc-section-number">5.2.2</span> Homogeneidad</a></li>
+<li><a href="#prueba-estadística-con-mann-whitney"><span class="toc-section-number">5.2.3</span> Prueba estadística con Mann-Whitney</a></li>
 </ul></li>
 <li><a href="#modelos-de-predicción"><span class="toc-section-number">5.3</span> Modelos de predicción</a><ul>
 <li><a href="#regresión-logarítmia"><span class="toc-section-number">5.3.1</span> Regresión logarítmia</a></li>
@@ -1274,6 +1275,26 @@ for (i in 1:ncol(titanic_file_train)) {
 ## Fligner-Killeen:med chi-squared = 27.095, df = 8, p-value = 0.0006806</code></pre>
 <p>Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.</p>
 </div>
+<div id="prueba-estadística-con-mann-whitney" class="section level3">
+<h3><span class="header-section-number">5.2.3</span> Prueba estadística con Mann-Whitney</h3>
+<p>La segunda prueba estadística que se aplicará consistirá en un contraste de hipótesis sobre una muestra para determinar si la probabilidad de sobrevivir al accidente es mayor dependiendo de las variables.</p>
+<p>Se debe destacar que un test paramétrico se debe utilizar cuando los datos siguen una distribucción normal, si la muestra es de tamaño inferior a 30. Como en nuestro caso esto no es así ya que la variable no sigue una distribucción normal ni de homogeneidad, se deben utilizar funciones no paramétricas, como podría ser Mann-Whitney. Así pues, se estudia la relación para las variables numéricas del modelo, ‘Age’ y ‘Fare’</p>
+<pre class="r"><code>wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Age)</code></pre>
+<pre><code>## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  as.numeric(titanic_file_train$Survived) and titanic_file_train$Age
+## W = 12262, p-value &lt; 2.2e-16
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
+<pre class="r"><code>wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Fare)</code></pre>
+<pre><code>## 
+##  Wilcoxon rank sum test with continuity correction
+## 
+## data:  as.numeric(titanic_file_train$Survived) and titanic_file_train$Fare
+## W = 0, p-value &lt; 2.2e-16
+## alternative hypothesis: true location shift is not equal to 0</code></pre>
+<p>Puesto que para ambas variables se obtiene un p-valor menor que el valor de significación fijado, rechazamos la hipótesis nula. Por tanto, podemos concluir que, efectivamente, existe relación entre la variable objetivo y las variables de Edad y Precio.</p>
+</div>
 </div>
 <div id="modelos-de-predicción" class="section level2">
 <h2><span class="header-section-number">5.3</span> Modelos de predicción</h2>
@@ -1434,7 +1455,7 @@ summary(model)</code></pre>
 ## C5.0.default(x = trainX, y = trainy, rules = TRUE)
 ## 
 ## 
-## C5.0 [Release 2.07 GPL Edition]      Sun Jun 07 22:59:51 2020
+## C5.0 [Release 2.07 GPL Edition]      Sun Jun 07 23:35:39 2020
 ## -------------------------------
 ## 
 ## Class specified by attribute `outcome'

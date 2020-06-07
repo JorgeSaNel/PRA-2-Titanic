@@ -636,6 +636,18 @@ fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)
 
 Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar  la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
 
+### Prueba estadística con Mann-Whitney
+La segunda prueba estadística que se aplicará consistirá en un contraste de hipótesis sobre una muestra para determinar si la probabilidad de sobrevivir al accidente es mayor dependiendo de las variables. 
+
+Se debe destacar que un test paramétrico se debe utilizar cuando los datos siguen una distribucción normal, si la muestra es de tamaño inferior a 30. Como en nuestro caso esto no es así ya que la variable no sigue una distribucción normal ni de homogeneidad, se deben utilizar funciones no paramétricas, como podría ser Mann-Whitney. Así pues, se estudia la relación para las variables numéricas del modelo, 'Age' y 'Fare' (FamilySize se queda fuera puesto que sí es homocedástica).
+
+```{r message= FALSE, warning=FALSE}
+wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Age)
+wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Fare)
+```
+
+Puesto que para ambas variables se obtiene un p-valor menor que el valor de significación fijado, rechazamos la hipótesis nula. Por tanto, podemos concluir que, efectivamente, existe relación entre la variable objetivo y las variables de Edad y Precio.
+
 ## Modelos de predicción
 En el último apartado de este punto de análisis estadístico, se procede a realizar tres modelos de predicción diferentes y comparar cuál es el mejor.
 
@@ -889,7 +901,7 @@ A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de
 
 En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). **METER AQUI LAS TECNICAS UTILIZADAS PARA LA LIMPIEZA DE DATOS**
 
-En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. 
+En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. 
 A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. 
 Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.
 
