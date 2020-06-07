@@ -438,172 +438,279 @@ titanic_file[titanic_file$Fare == max(titanic_file$Fare), c("Pclass", "Fare")]
 Como sospechábamos, se trata de viajeros de primera clase. Esto sumado a que los cuatro contienen el mismo valor en la variable Fare nos lleva a pensar que es un valor correcto, por lo que no deberemos transformarlo tampoco.
 
 # Análisis de los datos
-## Selección de los grupos de datos de interés
-Eliminamos las variables que no son interesantes para analizar si una persona ha sobrevivido. Estas son, el nombre, el ticket, el precio, la cabina, y la puerta de embarque.
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-titanic_file$Name <- NULL
-titanic_file$Ticket <- NULL
-titanic_file$Fare <- NULL
-titanic_file$Cabin <- NULL
-titanic_file$Embarked <- NULL
+A lo largo de este apartado se hará un análisis del conjunto de datos con el fin de obtener un modelo para predecir si una persona puede sobrevivir o no a un accidente como el Titanic dadas unas variables. En primer lugar, se seleccionarán los grupos de interés, seguido de un análisis de normalidad y homogeneidad. Por último, se harán unas pruebas estadísticas para obtener el modelo que mejor se adapte al conjunto de datos.
 
-str(titanic_file)
+No obstante, puesto que el análisis se va a realizar con el conjunto de datos cuya variable Survived está informada para obtener mejores resultados en el modelo, se procede a modificar el set:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+titanic_file_train <- titanic_file[!is.na(titanic_file$Survived),]
+```
+
+## Selección de los grupos de datos de interés
+En primer lugar, se seleccionan las variables que son interesantes dejar en el modelo para conocer si una persona ha sobrevivido al accidente. Para empezar, podemos eliminar aquellas que, claramente, no son relevantes para el modelo, como son las variables 'PassengerID', 'Name', 'Ticket' o 'Cabin'. Estas variables, por su definición, no representan nada para el modelo. Es decir, aunque entrenemos al modelo con estas variables, no va a ver una mejoría, sino que seguramente empeore el modelo haciéndolo más complejo.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Se eliminan las variables
+titanic_file_train$PassengerId <- NULL
+titanic_file_train$Name <- NULL
+titanic_file_train$Ticket <- NULL
+titanic_file_train$Cabin <- NULL
+
+# Se comprueba que no aparecen en el fichero
+str(titanic_file_train)
 ```   
 
+No obstante, es necesario realizar un análisis con el resto de variables para conocer si merece la pena eliminarlas o no. Sin embargo, antes de hacer este análisis, vemos conveniente crear una nueva variable que represente el tamaño de la familia haciendo la suma entre las variables 'SibSp', número de hermanos, y 'Parch', número de padres o hijos. Esta nueva variable se llamará **FamilySize**.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Construimos un atributo nuevo: family size.
+titanic_file_train$FamilySize <- titanic_file_train$SibSp + titanic_file_train$Parch +1
+
+# Observamos su distribucción
+titanic_file1 <- titanic_file_train[1:filas,]
+ggplot(data = titanic_file1[!is.na(titanic_file_train[1:filas,]$FamilySize),],aes(x=FamilySize,fill=Survived))+geom_histogram(binwidth =1,position="fill")+ylab("Frecuencia") + ggtitle("Representación de la nueva variable Tamaño de la familia con la variable objetivo") + xlab("Tamaño de la familia") + ylab("Conteo Supervivencia") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos sacar como conclusión que aquellas familias compuestas por menos integrantes sobrevivieron más, en porcentaje, que aquellas con más de 5 miembros.
+
+Tras la construcción de esta nueva variable, procedemos a realizar el análisis comentado para ver qué variables son representativas en el modelo. Este análisis es diferente en función del tipo de la variable, utilizando:
+
+* **Correlación** para aquellas variables que numéricas, como 'Age', 'Fare', 'SibSp', 'Parch', o la nueva variable 'FamilySize'. Estas variables, aunque sean de tipo integer, se corresponden con variables numéricas por lo que será necesario convertirlas al tipo de dato correcto.
+* **Test Chi Cuadrado** para aquellas variables que son categóricas, 'Pclass', 'Sex' o 'Embarked' 
+
+### Correlación
+Así pues, se procede a realizar un análisis de correlación entre las distintas variables para determinar cuáles de ellas ejercen una mayor influencia sobre la variable objetivo.
+
+Tal y como se ha comentado, el primer paso es modificar las variables del número de hermanos y de hijos/padres para que sea del tipo numérico.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Se convierten las variables al tipo numérico
+titanic_file_train$SibSp <- as.numeric(titanic_file_train$SibSp)
+titanic_file_train$Parch <- as.numeric(titanic_file_train$Parch)
+
+# Se comprueba que el tipo de dato es correcto.
+str(titanic_file_train)
+```
+
+El siguiente paso será analizar dichas variables con una correlación. Para ello se obtiene solamente las variables mencionadas:
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+titanic_corr <- titanic_file_train %>% select('Age', 'Fare', 'SibSp', 'Parch', 'FamilySize')
+
+# Pequeña comprobación de que la copia se ha hecho correctamente
+head(titanic_corr, 2)
+```
+
+Dicho lo cual, se procede a analizar cuál es la correlación entre dichas variables.
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(ggcorrplot)
+corr_norm <- cor(titanic_corr)
+
+ggcorrplot(corr_norm, hc.order = TRUE, 
+           type = "lower", 
+           lab = TRUE, 
+           lab_size = 3, 
+           method="circle", 
+           colors = c("tomato2", "white", "springgreen3"), 
+           title="Correlación con datos Normalizados de Titanic", 
+           ggtheme=theme_dark) + theme(plot.title = element_text(hjust = 0.5))
+```
+
+Podemos observar que la correlación entre las variables suele ser bastante baja, a excepción de la nueva variable creada, FamilySize, que tiene una alta correlación con las variables 'SibSp' y 'Parch'. Así pues, con el fin de optimizar el modelo y no añadir variables con alta correlación, se eliminan las dos variables utilizadas para crear el Tamaño de la familia del fichero original.
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+# Se eliminan las variables
+titanic_file_train$SibSp <- NULL
+titanic_file_train$Parch <- NULL
+
+# Se comprueba que no aparecen en el fichero
+str(titanic_file_train)
+``` 
+
+### Test Chi Cuadrado
+Por último, se analiza si existe relación entre las variables categóricas con la variable objetivo, que son las variables 'Pclass', 'Sex' o 'Embarked'. Para ello, se utiliza el test Chi-cuadrado de Pearson. Un resultado significativo nos dirá que existe asociación entre ambas variables. Este apartado se realiza bajo la función _chisq.test_, la cual recibe por parámetro la tabla de contingencia entre la variable objetivo y la variable a estudiar.
+
+Respecto al análisis de los resultados, se confirmará que las variables son dependientes y tienen relación entre sí siempre y cuando el valor del test sea inferior al valor significativo, el cual es de 0.05, y por tanto se rechaza la hipótesis nula de independencia. Esta hipótesis está definida de la siguiente manera:
+
+<center>H_{0}: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') son independientes</center>
+<center>H_{1}: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') no son independientes</center>
+
+#### Variable objetivo con Pclass
+Dicho lo cual, se genera la tabla de contingencia entre la variable objetivo y la primera variable a analizar, las clases sociales.
+```{r message= FALSE, warning=FALSE}
+#install.packages("knitr") # Tabla [14]
+library(knitr)
+#install.packages("kableExtra") # Tabla [14]
+library(kableExtra)
+
+# Creamos la tabla de contingencia
+tc_pclass <- table(titanic_file_train$Survived, titanic_file_train$Pclass)
+# Le damos formato a la tabla de contingencia
+tc_pclass %>% kable() %>% kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+A simple vista, se puede confirmar que la gran mayoría de muertos al accidente del Titanic eran aquellos que pertenecían a la tercera clase. A continuación se realiza el Test con la tabla de contingencia:
+```{r message= FALSE, warning=FALSE}
+chisq.test(tc_pclass) 
+```
+Puesto que el p-valor es muy cercano a 0, se debe rechazar la hipótesis nuela y afirmar que existe relación entre las variables.
+
+#### Variable objetivo con Sexo
+De la misma manera, se realiza el mismo análisis entre la variable objetivo y la variable sexo:
+
+```{r message= FALSE, warning=FALSE}
+# Creamos la tabla de contingencia
+tc_sex <- table(titanic_file_train$Survived, titanic_file_train$Sex)
+# Le damos formato a la tabla de contingencia
+tc_sex %>% kable() %>% kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+A simple vista, se puede confirmar que la gran mayoría de los muertos eran hombres, casi 4 veces más que las mujeres. A continuación se realiza el Test con la tabla de contingencia:
+```{r message= FALSE, warning=FALSE}
+chisq.test(tc_sex) 
+```
+Tal y como se ha dicho anteriormente, debido a que el valor de p es inferior al valor significativo de 0.05, debemos rechazar la hipótesis nula y afirmar que las variables son dependientes entre sí.
+
+#### Variable objetivo con Embarked
+Por último, toca analizar la relación entre la variable objetivo y la variable de embarcación. Primero, se realiza la tabla de contingencia:
+```{r message= FALSE, warning=FALSE}
+# Creamos la tabla de contingencia
+tc_embarked <- table(titanic_file_train$Survived, titanic_file_train$Embarked)
+tc_embarked <- tc_embarked[,-1]
+
+# Le damos formato a la tabla de contingencia
+tc_embarked %>% kable() %>% kable_styling(bootstrap_options = "striped", full_width = F)
+```
+
+
+Una vez obtenida la tabla de contingencia, se ejecuta la función para conseguir el valor de Chi-Square, obteniendo un valor inferior al valor significativo de 0.05. Así pues, se debe rechazar la hipótesis nula y afirmar que las variables tienen relación entre sí.
+```{r message= FALSE, warning=FALSE}
+chisq.test(tc_embarked) 
+```
+
+#### Conclusiones del análisis de las variables
+Tras el análisis de las variables realizado, llegamos a la conclusión de que las siguientes variables son interesantes utilizarlas para crear el modelo en base a nuestra variable objetivo, la supervivencia al accidente:
+```{r message= FALSE, warning=FALSE}
+str(titanic_file_train)
+```
 
 ## Comprobación de la normalidad y homogeneidad de la varianza
+A lo largo de este apartado se estudiará la normalidad y homogeneidad de las variables.
 
 ### Normalidad
-Para la comprobación de que los valores que toman nuestras variables cuantitativas provienen de una población distribuida normalmente, utilizaremos la prueba de normalidad de Anderson-Darling.
+La comprobación de normalidad se realiza para aquellas variables que son numéricas, que en este caso son 'Age', 'Fare' y la nueva variable creada, 'FamilySize'.
 
-Así, se comprueba que para que cada prueba se obtiene un p-valor superior al nivel de significación prefijado $\alpha = 0.05$. Si esto se cumple, entonces se considera que variable en cuestión sigue una distribución normal. 
-
+Para la comprobación de que los valores que toman nuestras variables cuantitativas provienen de una población distribuida normalmente, utilizaremos la prueba de normalidad de Anderson-Darling. Así, se comprueba que para que cada prueba se obtiene un p-valor superior al nivel de significación prefijado $\alpha = 0.05$. Si esto se cumple, entonces se considera que variable en cuestión sigue una distribución normal. 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(nortest)
 alpha = 0.05
-col.names = colnames(titanic_file)
+col.names = colnames(titanic_file_train)
 
-for (i in 1:ncol(titanic_file)) {
+for (i in 1:ncol(titanic_file_train)) {
   if (i == 1) cat("Variables que no siguen una distribución normal:\n")
   
-  if (is.integer(titanic_file[,i]) | is.numeric(titanic_file[,i])) {
-    p_val = ad.test(titanic_file[,i])$p.value
+  if (is.integer(titanic_file_train[,i]) | is.numeric(titanic_file_train[,i])) {
+    p_val = ad.test(titanic_file_train[,i])$p.value
     if (p_val < alpha) {
       cat(col.names[i])
         
       # Format output
-      if (i < ncol(titanic_file) - 1) cat(", ")
+      if (i < ncol(titanic_file_train) - 1) cat(", ")
       if (i %% 3 == 0) cat("\n")
     }
   }
 }
 ```  
 
-Observamos que ninguna variable sigue una distribución normal.
+Observamos que ninguna de las tres variables numéricas siguen una distribución normal.
 
 ### Homogeneidad
-Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación de un test de Fligner-Killeen. En este caso, estudiaremos esta homogeneidad en cuanto a los grupos conformados por los vehículos que presentan un motor turbo frente a un motor estándar. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son iguales.
+Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación de un test de Fligner-Killeen. Este test se aplica para las variables que no siguen una distritucción de normalidad, como son las tres variables numéricas que se ha analizado anteriormente. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son diferentes, es decir:
 
-** COMENTO A PARTIR DE AQUI PORQUE AL SER EL TIPO DE DATO DIFERENTE NO VA **
+<center>H_{0}: La variable objetivo y la variable a analizar tienen diferente varianza</center>
+<center>H_{1}: La variable objetivo y la variable a analizar tienen la misma varianza</center>
+
+Como siempre, se aceptará la hipótesis nula siempre y cuando el P-Valor sea inferior al valor significativo de 0.05. 
+
+Se ejecuta el test de Fligner-Killeen para todas las variables:
+
+** DUDA: ¿Se aplica el test también sobre variables categóricas? **
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-#fligner.test(Survived ~ Pclass, data = titanic_file)
-#fligner.test(Survived ~ Sex, data = titanic_file)
-#fligner.test(Survived ~ Age, data = titanic_file)
-#fligner.test(Survived ~ SibSp, data = titanic_file)
-#fligner.test(Survived ~ Parch, data = titanic_file)
+#fligner.test(as.numeric(Survived) ~ Pclass, data = titanic_file_train)
+#fligner.test(as.numeric(Survived) ~ Sex, data = titanic_file_train)
+fligner.test(as.numeric(Survived) ~ Age, data = titanic_file_train)
+fligner.test(as.numeric(Survived) ~ Fare, data = titanic_file_train)
+#fligner.test(as.numeric(Survived) ~ Embarked, data = titanic_file_train)
+fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)
 ```
 
-Puesto que obtenemos un p-valor superior a 0.05 para la variable Edad, 'Age', aceptamos la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
+Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar  la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
 
-## Pruebas estadísticas
+## Modelos de predicción
+En el último apartado de este punto de análisis estadístico, se procede a realizar tres modelos de predicción diferentes y comparar cuál es el mejor.
 
-### Correlaciones
-En primer lugar, procedemos a realizar un análisis de correlación entre las distintas variables para determinar cuáles de ellas ejercen una mayor influencia sobre la probabilidad de sobrevivir al accidente.
-
-```{r echo=TRUE, message=FALSE, warning=FALSE}
-#library(ggcorrplot)
-#corr_norm <- cor(titanic_file)
-
-#ggcorrplot(corr_norm, hc.order = TRUE, 
-#           type = "lower", 
-#           lab = TRUE, 
-#           lab_size = 3, 
-#           method="circle", 
-#           colors = c("tomato2", "white", "springgreen3"), 
-#           title="Correlación con datos Normalizados de Titanic", 
-#           ggtheme=theme_dark) + theme(plot.title = element_text(hjust = 0.5))
-```
-
-Podemos observar que la variable que más correlación tiene con las personas que han sobrevivido el el Sexo, con una correlación de 0.44 sobre 1.
-
-### Hipótesis
-
-¿Tienen más probabilidades de sobrevivir al accidente del titanic los chicos que las chicas?
-
-La segunda prueba estadística que se aplicará consistirá en un contraste de hipótesis sobre dos muestras para determinar si el la probabilidad de sobrevivir es mayor dependiendo del sexo. Para ello, tendremos dos muestras: la primera de ellas se corresponderá con todas las personas y, la segunda, con aquellos que eran hombres.
-
-Se debe destacar que un test paramétrico como el que a continuación se utiliza necesita que los datos sean normales, si la muestra es de tamaño inferior a 30. Como en nuestro caso, n > 30, el contraste de hipótesis siguiente es válido (aunque podría utilizarse un test no paramétrico como el de Mann-Whitney, que podría resultar ser más eficiente para este caso).
-
-Así, se plantea el siguiente contraste de hipótesis de dos muestras sobre la diferencia de medias, el cual es unilateral atendiendo a la formulación de la hipótesis alternativa:
-
-<center>$H_{0}: \mu_{1} = \mu_{2}$</center>
-<center>$H_{1}: \mu_{1} > \mu_{2}$</center>
-
-donde μ1 es la media de la población de la que se extrae la primera muestra y μ2 es la media de la población de la que extrae la segunda. 
-
-```{r message= FALSE, warning=FALSE}
-#titanic_file_hombres <- titanic_file[titanic_file$Sex == 1, ]
-```
-
-```{r message= FALSE, warning=FALSE}
-#t.test(titanic_file, titanic_file_hombres, alternative = "greater")
-```
-
-Puesto que obtenemos un p-valor mayor que el valor de significación fijado, aceptamos la hipótesis nula. Por tanto, no podemos concluir que los chicos sobreviviesen más que las chicas, sino que fue por igual.
-
-### Regresión Lineal
-Se realiza el modelo de regresión lineal. Se empieza metiendo en el modelo la variable más correlacionada, el sexo, y se irá probando a añadir nuevas variables para ver si el modelo mejora o empeora.
-
-```{r message= FALSE, warning=FALSE}
-#regresion_sexo <- lm(Survived ~ Sex, data = titanic_file)
-#summary(regresion_sexo)
-```
-Se puede observar que el coeficiente de determinación es __Multiple R-squared: 0.193__. Esto quiere decir que un 19.3% del modelo tiene relación entre el la supervivencia y el sexo.
-
-Puesto que este valor es muy bajo, se añade la segunda variable más correlacionada al modelo para ver si mejora.
-```{r message= FALSE, warning=FALSE}
-#regresion_mltp <- lm(Survived ~ Sex + Pclass, data = titanic_file)
-#summary(regresion_mltp)
-```
-Observamos que el modelo ha mejorado considerablemente, consiguiendo un **Multiple R-squared:  0.2943**.
-```{r message= FALSE, warning=FALSE}
-#regresion_mltp_3 <- lm(Survived ~ Sex + Pclass + Age, data = titanic_file)
-#summary(regresion_mltp_3)
-```
-Añadiendo una nueva variable, el modelo mejora a un 0.32 de $R^{2}$. Podemos comprobar que el modelo no mejora al añadir nuevas variables:
-```{r message= FALSE, warning=FALSE}
-#regresion_mltp_5 <- lm(Survived ~ Sex + Pclass + Age + SibSp + Parch, data = titanic_file)
-#summary(regresion_mltp_5)
-```
-Vemos que al añadir estas dos nuevas variables, el modelo se mantiene, por lo que revertimos a la versión anterior y dejamos esta por buena.
+* En primer lugar, se utilizará una regresión múltiple logarítmica ya que la variable objetivo es dicotómica. En caso de que no fuese una variable dicotómica, tendría más sentido realizar una regresión múltiple lineal.
+* A continuación se utilizará el modelo de clasificación supervisado C50 que corresponde a un árbol de decisión.
+* Por último, se utilizará otro algoritmo de árbol de decisión como es el RPART.
 
 ### Regresión logarítmia
-Adicionalmente, se crea un modelo logarítmico para ver si hay mejora. En este caso, al tener variables dicotómicas, tiene más sentido utilizar un modelo logarítmico.
+En primer lugar, se procede a generar una regresión logarítmica múltiple con la función __glm__. Esta función recibe tres parámetros, siendo la primera la variable objetivo, la segunda las variables independientes, y en tercer lugar el set de datos. Adicionalmente, le indicamos que la familia elegida para el modelo es la binomial puesto que la variable objetivo es dicotómica.
 
+Tal y como se ha visto, las 6 variables analizadas, a parte de la variable objetivo, son relevantes para el modelo. No obstante, se crean diferentes modelos logarítmicos con diferentes variables para analizar cúal es el que mejor resultados obtiene.
 ```{r message= FALSE, warning=FALSE}
-#regresion_lg <- glm(Survived ~ Sex, data = titanic_file, family = "binomial")
-#summary(regresion_lg)
+# Se crean 5 modelos con diferentes variables.
+modelo_glm_1 <- glm(Survived ~ Pclass + Sex + Embarked, data = titanic_file_train, family = "binomial")
+modelo_glm_2 <- glm(Survived ~ Age + Fare + FamilySize, data = titanic_file_train, family = "binomial")
+modelo_glm_3 <- glm(Survived ~ Pclass + Sex + Age + Fare, data = titanic_file_train, family = "binomial")
+modelo_glm_4 <- glm(Survived ~ Sex + Fare + Embarked + FamilySize, data = titanic_file_train, family = "binomial")
+modelo_glm_5 <- glm(Survived ~ Pclass + Sex + Age + Fare + Embarked + FamilySize, data = titanic_file_train, family = "binomial")
 ```
 
+Una vez se tienen los modelos, se comprueba cuál es el mejor. Para ello se obtiene el R^2 de cada modelo y se compara con los demás. Para obtener este valor se utiliza la función _rsq_ de la librería RSQ. La teória indica que el mejor modelo será aquel que tenga el valor R^2 más alto.
 ```{r message= FALSE, warning=FALSE}
-#regresion_lg <- glm(Survived ~ Sex + Pclass, data = titanic_file, family = "binomial")
-#summary(regresion_lg)
+library(rsq)
+
+# Se crea la tabla de coeficientes
+tabla.coeficientes <- matrix(c(1, rsq(modelo_glm_1, adj=TRUE), 
+                               2, rsq(modelo_glm_2, adj=TRUE), 
+                               3, rsq(modelo_glm_3, adj=TRUE), 
+                               4, rsq(modelo_glm_4, adj=TRUE), 
+                               5, rsq(modelo_glm_5, adj=TRUE)), 
+                             ncol = 2, byrow = TRUE
+                      )
+
+# Se muestra por pantalla la matriz creada
+colnames(tabla.coeficientes) <- c("Modelo", "R^2")
+tabla.coeficientes
+```
+Como podemos observar, el modelo que mejor resultado da es el último, el modelo 5, el cual contiene las 6 variables. No obstante, cabe mencionar que el modelo 3, el cual se ha realizado en base a las variables categóricas más la variable numérica Fare, que son dos variables menos, tiene unos resultados bastantes parecidos al modelo 5. 
+
+Otra manera de obtener el mejor modelo es con el parámetro AIC, Akaike information criterion. Cuanto más bajo sea el parámetro, mejor será el modelo. Se comprueba este parámetro para los dos mejores modelos, el modelo 3 y el 5.
+```{r message= FALSE, warning=FALSE}
+cat("Modelo 3: ")
+summary(modelo_glm_3$aic)
+cat("Modelo 5: ")
+summary(modelo_glm_5$aic)
 ```
 
+Se puede comprobar que el parámetro AIC para el Modelo 3 es de 814, mientras que en el Modelo 5 tiene un valor de 801. Así pues, entre los modelos de regresión logarítmico, el mejor modelo es el utilizado con todas las variables, el **Modelo 5**.
 
-```{r message= FALSE, warning=FALSE}
-#regresion_lg <- glm(Survived ~ Sex + Pclass + Age, data = titanic_file, family = "binomial")
-#summary(regresion_lg)
-```
-
-Observamos que el modelo es mejor con estas tres variables, puesto que el valor de AIC es el más bajo de las tres regresiones realizadas.
+### Árbol de decisión - C50
 
 ### Predicciones
-Ahora podemos predecir si una persona sobrevivió al accidente con los modelos creados, el lineal y el logaritmico:
 
+#### Modelo Logarítmico
 ```{r message= FALSE, warning=FALSE}
-#newdata <- data.frame(
-#  Pclass = 1,
-#  Sex = 2,
-#  Age = 25
-#)
+new_person <- data.frame(
+  Pclass = "1",
+  Sex = "male",
+  Age = 25,
+  Fare = 80,
+  Embarked = "C",
+  FamilySize = 1
+)
 
-# Predecir la supervivencia con el modelo lineal
-#predict(regresion_mltp_3, newdata)
 # Predecir la supervivencia con el modelo logaritmico
-#predict(regresion_lg, newdata)
+predict(modelo_glm_5, new_person)
+
 ```
-** POR QUE SALE UN VALOR DE DOS PARA EL MODELO LOGARITMICO???? **
 
 # Representación gráfica de los resultados
 
@@ -627,3 +734,6 @@ Ahora podemos predecir si una persona sobrevivió al accidente con los modelos c
 * [5] Jason W. Osborne (2010). Data Cleaning Basics: Best Practices in Dealing with Extreme Scores. Newborn and Infant Nursing Reviews; 10 (1): pp. 1527-3369.
 * [6] Peter Dalgaard (2008). Introductory statistics with R. Springer Science & Business Media.
 * [7] Wes McKinney (2012). Python for Data Analysis. O’Reilley Media, Inc.
+
+** URLs **
+* Análisis del R^2 dado un modelo de regresión logarítmico.
