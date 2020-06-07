@@ -663,7 +663,7 @@ modelo_glm_4 <- glm(Survived ~ Sex + Fare + Embarked + FamilySize, data = titani
 modelo_glm_5 <- glm(Survived ~ Pclass + Sex + Age + Fare + Embarked + FamilySize, data = titanic_file_train, family = "binomial")
 ```
 
-Una vez se tienen los modelos, se comprueba cuál es el mejor. Para ello se obtiene el R^2 de cada modelo y se compara con los demás. Para obtener este valor se utiliza la función _rsq_ de la librería RSQ. La teória indica que el mejor modelo será aquel que tenga el valor R^2 más alto.
+Una vez se tienen los modelos, se comprueba cuál es el mejor. Para ello se obtiene el $R^2$ de cada modelo y se compara con los demás. Para obtener este valor se utiliza la función _rsq_ de la librería RSQ. La teória indica que el mejor modelo será aquel que tenga el valor $R^2$ más alto.
 ```{r message= FALSE, warning=FALSE}
 library(rsq)
 
@@ -692,6 +692,58 @@ summary(modelo_glm_5$aic)
 
 Se puede comprobar que el parámetro AIC para el Modelo 3 es de 814, mientras que en el Modelo 5 tiene un valor de 801. Así pues, entre los modelos de regresión logarítmico, el mejor modelo es el utilizado con todas las variables, el **Modelo 5**.
 
+Para ahondar más en el análisis de los modelos construidos, dibujaremos su curva ROC. Esto nos ofrecerá una visión de su sensibilidad (capacidad del modelo para identificar verdaderos positivos) y la relación con su especifidad (capacidad del modelo para identificar verdaderos negativos). El área bajo esta curva nos ofrece otra medida de la bondad del modelo, siendo 1 el valor máximo y 0.5 el mínimo. Un aspecto bueno de este análisis es que es insensible completamente a la distribución de las clases en los datos. Pongamos por ejemplo que de 1000 personas observadas, 999 hubieran sobrevivido al accidente del Titanic. Un modelo que dijera siempre que la persona observada ha sobrevivido ofrecería una precisión del 99.9 %, pero realmente este no sería un buen modelo y analizar únicamente la precisión nos llevaría a conclusiones erróneas. Este modelo tendría una sensibilidad enorme, pero su especificidad sería pésima, ya que no sería capaz de identificar verdaderos negativos. La curva ROC, por el contrario, nos revelaría la verdad acerca de este modelo.
+
+```{r message= FALSE, warning=FALSE}
+
+library(installr)
+library(pROC)
+
+roc1 <- roc(titanic_file_train$Survived, modelo_glm_1$fitted.value)
+roc2 <- roc(titanic_file_train$Survived, modelo_glm_2$fitted.value)
+roc3 <- roc(titanic_file_train$Survived, modelo_glm_3$fitted.value)
+roc4 <- roc(titanic_file_train$Survived, modelo_glm_4$fitted.value)
+roc5 <- roc(titanic_file_train$Survived, modelo_glm_5$fitted.value)
+
+sensibilidad = rbind(c(1:99), c(1:99), c(1:99), c(1:99), c(1:99))
+especificidad = rbind(c(1:99), c(1:99), c(1:99), c(1:99), c(1:99))
+
+for (i in c(1:99)) {
+  
+  mat1 <- data.frame(table(titanic_file_train$Survived, modelo_glm_1$fitted.values > i/100))
+  sensibilidad[1, i] <- ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "FALSE", "Freq"]))
+  especificidad[1, i] <- ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "TRUE", "Freq"]))
+  
+  mat2 <- data.frame(table(titanic_file_train$Survived, modelo_glm_2$fitted.values > i/100))
+  sensibilidad[2, i] <- ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "FALSE", "Freq"]))
+  especificidad[2, i] <- ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "TRUE", "Freq"]))
+  
+  mat3 <- data.frame(table(titanic_file_train$Survived, modelo_glm_3$fitted.values > i/100))
+  sensibilidad[3, i] <- ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "FALSE", "Freq"]))
+  especificidad[3, i] <- ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "TRUE", "Freq"]))
+  
+  mat4 <- data.frame(table(titanic_file_train$Survived, modelo_glm_4$fitted.values > i/100))
+  sensibilidad[4, i] <- ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "FALSE", "Freq"]))
+  especificidad[4, i] <- ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "TRUE", "Freq"]))
+  
+  mat5 <- data.frame(table(titanic_file_train$Survived, modelo_glm_5$fitted.values > i/100))
+  sensibilidad[5, i] <- ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "FALSE", "Freq"]))
+  especificidad[5, i] <- ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "TRUE", "Freq"]))
+  
+}
+
+plot(c(1:101)/100, c(1:101)/100, type = "l", col = "black", main = "Curvas ROC", xlab = "1 - especificidad", ylab = "sensibilidad")
+lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[1,], 0), type = "l", col = "blue")
+lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[2,], 0), type = "l", col = "green")
+lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[3,], 0), type = "l", col = "red")
+lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[4,], 0), type = "l", col = "purple")
+lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[5,], 0), type = "l", col = "orange")
+legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc1), 2)), paste("Modelo 2. AUC = ", round(auc(roc2), 2)), paste("Modelo 3. AUC = ", round(auc(roc3), 2)), paste("Modelo 4. AUC = ", round(auc(roc4), 2)), paste("Modelo 5. AUC = ", round(auc(roc5), 2))), col = c("blue", "green", "red", "purple", "orange"), pch = c("--", "--", "--", "--", "--"), ncol = 1)
+
+```
+
+La métrica del área bajo la curva ROC nos dice que el mejor modelo en términos de sensibilidad y especifidad es el modelo número 5, con un área bajo la curva de 0.86.
+
 ### Árbol de decisión - C50
 
 ### Predicciones
@@ -699,16 +751,16 @@ Se puede comprobar que el parámetro AIC para el Modelo 3 es de 814, mientras qu
 #### Modelo Logarítmico
 ```{r message= FALSE, warning=FALSE}
 new_person <- data.frame(
-  Pclass = "1",
+  Pclass = "3",
   Sex = "male",
-  Age = 25,
+  Age = 45,
   Fare = 80,
   Embarked = "C",
   FamilySize = 1
 )
 
 # Predecir la supervivencia con el modelo logaritmico
-predict(modelo_glm_5, new_person)
+predict(modelo_glm_5, new_person, type = "response")
 
 ```
 
@@ -736,4 +788,4 @@ predict(modelo_glm_5, new_person)
 * [7] Wes McKinney (2012). Python for Data Analysis. O’Reilley Media, Inc.
 
 ** URLs **
-* Análisis del R^2 dado un modelo de regresión logarítmico.
+* Análisis del $R^2$ dado un modelo de regresión logarítmico.
