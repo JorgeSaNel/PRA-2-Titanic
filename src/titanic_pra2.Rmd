@@ -630,14 +630,9 @@ Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplica
 Como siempre, se aceptará la hipótesis nula siempre y cuando el P-Valor sea inferior al valor significativo de 0.05. 
 
 Se ejecuta el test de Fligner-Killeen para todas las variables:
-
-** DUDA: ¿Se aplica el test también sobre variables categóricas? **
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-#fligner.test(as.numeric(Survived) ~ Pclass, data = titanic_file_train)
-#fligner.test(as.numeric(Survived) ~ Sex, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ Age, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ Fare, data = titanic_file_train)
-#fligner.test(as.numeric(Survived) ~ Embarked, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)
 ```
 
@@ -666,7 +661,6 @@ modelo_glm_5 <- glm(Survived ~ Pclass + Sex + Age + Fare + Embarked + FamilySize
 Una vez se tienen los modelos, se comprueba cuál es el mejor. Para ello se obtiene el R^2 de cada modelo y se compara con los demás. Para obtener este valor se utiliza la función _rsq_ de la librería RSQ. La teória indica que el mejor modelo será aquel que tenga el valor R^2 más alto.
 ```{r message= FALSE, warning=FALSE}
 library(rsq)
-
 # Se crea la tabla de coeficientes
 tabla.coeficientes <- matrix(c(1, rsq(modelo_glm_1, adj=TRUE), 
                                2, rsq(modelo_glm_2, adj=TRUE), 
@@ -691,6 +685,18 @@ summary(modelo_glm_5$aic)
 Se puede comprobar que el parámetro AIC para el Modelo 3 es de 814, mientras que en el Modelo 5 tiene un valor de 801. Así pues, entre los modelos de regresión logarítmico, el mejor modelo es el utilizado con todas las variables, el **Modelo 5**.
 
 ### Árbol de decisión - C50
+```{r message= FALSE, warning=FALSE}
+set.seed(1)
+titanic_file_random <- titanic_file_train[sample(nrow(titanic_file_train)),]
+
+set.seed(666)
+# Variable objetivo en Y
+y <- titanic_file_random[,1] 
+# Resto de variables en X
+X <- titanic_file_random[,2:7] 
+```
+
+
 
 ### Predicciones
 
