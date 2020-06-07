@@ -529,8 +529,8 @@ Por último, se analiza si existe relación entre las variables categóricas con
 
 Respecto al análisis de los resultados, se confirmará que las variables son dependientes y tienen relación entre sí siempre y cuando el valor del test sea inferior al valor significativo, el cual es de 0.05, y por tanto se rechaza la hipótesis nula de independencia. Esta hipótesis está definida de la siguiente manera:
 
-<center>H_{0}: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') son independientes</center>
-<center>H_{1}: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') no son independientes</center>
+<center>$H_{0}$: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') son independientes</center>
+<center>$H_{1}$: La variable objetivo y la variable a analizar ('Pclass', 'Sex' o 'Embarked') no son independientes</center>
 
 #### Variable objetivo con Pclass
 Dicho lo cual, se genera la tabla de contingencia entre la variable objetivo y la primera variable a analizar, las clases sociales.
@@ -624,20 +624,15 @@ Observamos que ninguna de las tres variables numéricas siguen una distribución
 ### Homogeneidad
 Seguidamente, pasamos a estudiar la homogeneidad de varianzas mediante la aplicación de un test de Fligner-Killeen. Este test se aplica para las variables que no siguen una distritucción de normalidad, como son las tres variables numéricas que se ha analizado anteriormente. En el siguiente test, la hipótesis nula consiste en que ambas varianzas son diferentes, es decir:
 
-<center>H_{0}: La variable objetivo y la variable a analizar tienen diferente varianza</center>
-<center>H_{1}: La variable objetivo y la variable a analizar tienen la misma varianza</center>
+<center>$H_{0}$: La variable objetivo y la variable a analizar tienen diferente varianza</center>
+<center>$H_{1}$: La variable objetivo y la variable a analizar tienen la misma varianza</center>
 
 Como siempre, se aceptará la hipótesis nula siempre y cuando el P-Valor sea inferior al valor significativo de 0.05. 
 
 Se ejecuta el test de Fligner-Killeen para todas las variables:
-
-** DUDA: ¿Se aplica el test también sobre variables categóricas? **
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
-#fligner.test(as.numeric(Survived) ~ Pclass, data = titanic_file_train)
-#fligner.test(as.numeric(Survived) ~ Sex, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ Age, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ Fare, data = titanic_file_train)
-#fligner.test(as.numeric(Survived) ~ Embarked, data = titanic_file_train)
 fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)
 ```
 
@@ -666,7 +661,6 @@ modelo_glm_5 <- glm(Survived ~ Pclass + Sex + Age + Fare + Embarked + FamilySize
 Una vez se tienen los modelos, se comprueba cuál es el mejor. Para ello se obtiene el $R^2$ de cada modelo y se compara con los demás. Para obtener este valor se utiliza la función _rsq_ de la librería RSQ. La teória indica que el mejor modelo será aquel que tenga el valor $R^2$ más alto.
 ```{r message= FALSE, warning=FALSE}
 library(rsq)
-
 # Se crea la tabla de coeficientes
 tabla.coeficientes <- matrix(c(1, rsq(modelo_glm_1, adj=TRUE), 
                                2, rsq(modelo_glm_2, adj=TRUE), 
@@ -684,9 +678,7 @@ Como podemos observar, el modelo que mejor resultado da es el último, el modelo
 
 Otra manera de obtener el mejor modelo es con el parámetro AIC, Akaike information criterion. Cuanto más bajo sea el parámetro, mejor será el modelo. Se comprueba este parámetro para los dos mejores modelos, el modelo 3 y el 5.
 ```{r message= FALSE, warning=FALSE}
-cat("Modelo 3: ")
 summary(modelo_glm_3$aic)
-cat("Modelo 5: ")
 summary(modelo_glm_5$aic)
 ```
 
@@ -745,6 +737,18 @@ legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc1), 2)),
 La métrica del área bajo la curva ROC nos dice que el mejor modelo en términos de sensibilidad y especifidad es el modelo número 5, con un área bajo la curva de 0.86.
 
 ### Árbol de decisión - C50
+```{r message= FALSE, warning=FALSE}
+set.seed(1)
+titanic_file_random <- titanic_file_train[sample(nrow(titanic_file_train)),]
+
+set.seed(666)
+# Variable objetivo en Y
+y <- titanic_file_random[,1] 
+# Resto de variables en X
+X <- titanic_file_random[,2:7] 
+```
+
+
 
 ### Predicciones
 
