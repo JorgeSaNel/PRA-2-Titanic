@@ -814,7 +814,8 @@ A continuación se muestra el árbol obtenido que representa las reglas de asoci
 model <- C50::C5.0(trainX, trainy)
 plot(model)
 ```
-Por ejemplo, si la persona es de sexo masculino, mayor de 9 años, y con más de 4 miembros en la familia, con más de un 80% de probabilidades la persona morirá.
+
+Por ejemplo, si la persona es de sexo masculino, mayor de 9 años, y con más de 4 miembros en la familia, con más de un 80% de probabilidades la persona no sobrevivirá al accidente.
 
 #### Predecir con muestras no usadas
 Una vez tenemos el modelo, podemos comprobar su calidad prediciendo la clase para los datos de prueba que nos hemos reservado al principio.
@@ -881,9 +882,18 @@ print(sprintf("La precisión del árbol es: %.4f %%",100*sum(predicted_model == 
 
 # Representación gráfica de los resultados
 
-** QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI?? **
+**QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI??**
 
 # Conclusiones del análisis
+A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.
+
+En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). **METER AQUI LAS TECNICAS UTILIZADAS PARA LA LIMPIEZA DE DATOS**
+
+En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. 
+A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. 
+Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.
+
+Adicionalmente, tanto la tarea de preanálisis como de análisis de datos ha venido acompañada en todo momento de gráficas y tablas que ayudan a aclarar y confirmar las conclusiones obtenidas.
 
 ******
 # Bibliografía
