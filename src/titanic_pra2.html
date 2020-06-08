@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -376,6 +375,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -447,9 +447,8 @@ summary {
 <li><a href="#aplicación-algoritmo-rpart"><span class="toc-section-number">5.3.3</span> Aplicación algoritmo RPART</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#representación-gráfica-de-los-resultados"><span class="toc-section-number">6</span> Representación gráfica de los resultados</a></li>
-<li><a href="#conclusiones-del-análisis"><span class="toc-section-number">7</span> Conclusiones del análisis</a></li>
-<li><a href="#bibliografía"><span class="toc-section-number">8</span> Bibliografía</a></li>
+<li><a href="#conclusiones-del-análisis"><span class="toc-section-number">6</span> Conclusiones del análisis</a></li>
+<li><a href="#bibliografía"><span class="toc-section-number">7</span> Bibliografía</a></li>
 </ul>
 </div>
 
@@ -520,15 +519,15 @@ library(ggplot2)
 library(dplyr)
 
 # Guardamos el conjunto de datos test y train en un único dataset
-test &lt;- read.csv(&#39;../dataset/test.csv&#39;,stringsAsFactors = FALSE)
-train &lt;- read.csv(&#39;../dataset/train.csv&#39;, stringsAsFactors = FALSE)
+test &lt;- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
+train &lt;- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
 
 # Unimos los dos conjuntos de datos en uno solo
 titanic_file &lt;- bind_rows(train, test)
 
 # Verificamos la estructura del conjunto de datos
 str(titanic_file)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    1309 obs. of  12 variables:
+<pre><code>## 'data.frame':    1309 obs. of  12 variables:
 ##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
 ##  $ Pclass     : int  3 1 3 1 3 3 1 3 3 2 ...
@@ -573,7 +572,7 @@ for (i in cols){
 
 # Después de los cambios, analizamos la nueva estructura del conjunto de datos
 str(titanic_file)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    1309 obs. of  12 variables:
+<pre><code>## 'data.frame':    1309 obs. of  12 variables:
 ##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Survived   : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass     : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
@@ -871,35 +870,32 @@ cap_age = quantile(titanic_file$Age)[4] + (1.5 * IQR_age)
 cap_fare = quantile(titanic_file$Fare)[4] + (1.5 * IQR_fare)
 
 sort(titanic_file[titanic_file$Fare &lt; floor_fare | titanic_file$Fare &gt; cap_fare, &quot;Fare&quot;])</code></pre>
-<pre><code>##   [1]  66.6000  66.6000  69.3000  69.3000  69.5500  69.5500  69.5500
-##   [8]  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500
-##  [15]  69.5500  71.0000  71.0000  71.2833  71.2833  73.5000  73.5000
-##  [22]  73.5000  73.5000  73.5000  73.5000  73.5000  75.2417  75.2417
-##  [29]  75.2500  75.2500  76.2917  76.2917  76.7292  76.7292  76.7292
-##  [36]  77.2875  77.2875  77.9583  77.9583  77.9583  78.2667  78.2667
-##  [43]  78.8500  78.8500  78.8500  79.2000  79.2000  79.2000  79.2000
-##  [50]  79.2000  79.2000  79.6500  79.6500  79.6500  80.0000  80.0000
-##  [57]  81.8583  81.8583  81.8583  82.1708  82.1708  82.2667  82.2667
-##  [64]  83.1583  83.1583  83.1583  83.1583  83.1583  83.1583  83.4750
-##  [71]  83.4750  86.5000  86.5000  86.5000  89.1042  89.1042  90.0000
-##  [78]  90.0000  90.0000  90.0000  90.0000  91.0792  91.0792  93.5000
-##  [85]  93.5000  93.5000  93.5000 106.4250 106.4250 106.4250 108.9000
-##  [92] 108.9000 108.9000 110.8833 110.8833 110.8833 110.8833 113.2750
-##  [99] 113.2750 113.2750 120.0000 120.0000 120.0000 120.0000 133.6500
-## [106] 133.6500 134.5000 134.5000 134.5000 134.5000 134.5000 135.6333
-## [113] 135.6333 135.6333 135.6333 136.7792 136.7792 146.5208 146.5208
-## [120] 146.5208 151.5500 151.5500 151.5500 151.5500 151.5500 151.5500
-## [127] 153.4625 153.4625 153.4625 164.8667 164.8667 164.8667 164.8667
-## [134] 211.3375 211.3375 211.3375 211.3375 211.5000 211.5000 211.5000
-## [141] 211.5000 211.5000 221.7792 221.7792 221.7792 221.7792 227.5250
-## [148] 227.5250 227.5250 227.5250 227.5250 247.5208 247.5208 247.5208
-## [155] 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750
-## [162] 263.0000 263.0000 263.0000 263.0000 263.0000 263.0000 512.3292
+<pre><code>##   [1]  66.6000  66.6000  69.3000  69.3000  69.5500  69.5500  69.5500  69.5500
+##   [9]  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  71.0000
+##  [17]  71.0000  71.2833  71.2833  73.5000  73.5000  73.5000  73.5000  73.5000
+##  [25]  73.5000  73.5000  75.2417  75.2417  75.2500  75.2500  76.2917  76.2917
+##  [33]  76.7292  76.7292  76.7292  77.2875  77.2875  77.9583  77.9583  77.9583
+##  [41]  78.2667  78.2667  78.8500  78.8500  78.8500  79.2000  79.2000  79.2000
+##  [49]  79.2000  79.2000  79.2000  79.6500  79.6500  79.6500  80.0000  80.0000
+##  [57]  81.8583  81.8583  81.8583  82.1708  82.1708  82.2667  82.2667  83.1583
+##  [65]  83.1583  83.1583  83.1583  83.1583  83.1583  83.4750  83.4750  86.5000
+##  [73]  86.5000  86.5000  89.1042  89.1042  90.0000  90.0000  90.0000  90.0000
+##  [81]  90.0000  91.0792  91.0792  93.5000  93.5000  93.5000  93.5000 106.4250
+##  [89] 106.4250 106.4250 108.9000 108.9000 108.9000 110.8833 110.8833 110.8833
+##  [97] 110.8833 113.2750 113.2750 113.2750 120.0000 120.0000 120.0000 120.0000
+## [105] 133.6500 133.6500 134.5000 134.5000 134.5000 134.5000 134.5000 135.6333
+## [113] 135.6333 135.6333 135.6333 136.7792 136.7792 146.5208 146.5208 146.5208
+## [121] 151.5500 151.5500 151.5500 151.5500 151.5500 151.5500 153.4625 153.4625
+## [129] 153.4625 164.8667 164.8667 164.8667 164.8667 211.3375 211.3375 211.3375
+## [137] 211.3375 211.5000 211.5000 211.5000 211.5000 211.5000 221.7792 221.7792
+## [145] 221.7792 221.7792 227.5250 227.5250 227.5250 227.5250 227.5250 247.5208
+## [153] 247.5208 247.5208 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750
+## [161] 262.3750 263.0000 263.0000 263.0000 263.0000 263.0000 263.0000 512.3292
 ## [169] 512.3292 512.3292 512.3292</code></pre>
 <pre class="r"><code>sort(titanic_file[titanic_file$Age &lt; floor_age | titanic_file$Age &gt; cap_age, &quot;Age&quot;])</code></pre>
-<pre><code>##  [1] 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.5 61.0 61.0 61.0 61.0 61.0 62.0
-## [15] 62.0 62.0 62.0 62.0 63.0 63.0 63.0 63.0 64.0 64.0 64.0 64.0 64.0 65.0
-## [29] 65.0 65.0 66.0 67.0 70.0 70.0 70.5 71.0 71.0 74.0 76.0 80.0</code></pre>
+<pre><code>##  [1] 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.5 61.0 61.0 61.0 61.0 61.0 62.0 62.0
+## [16] 62.0 62.0 62.0 63.0 63.0 63.0 63.0 64.0 64.0 64.0 64.0 64.0 65.0 65.0 65.0
+## [31] 66.0 67.0 70.0 70.0 70.5 71.0 71.0 74.0 76.0 80.0</code></pre>
 <p>En las listas de datos proporcionadas (ordenadas de mayor a menor), se puede apreciar que el valor máximo para la edad es de 80 años, lo cual es más que posible que se trate de un valor correcto, y que por tanto no debemos transformar. Siguiendo el mismo razonamiento, el resto de valores también permanecerán intactos.</p>
 <p>Por parte de la variable Fare, encontramos varios valores inusualmente altos. Se trata de un precio de billete por encima de los 500 dólares. Es sospechoso, pero encontramos 4 observaciones distintas con exactamente el mismo precio. Esto nos sugiere que perfectamente se puede tratar de un billete de lujo. De ser así, debería tratarse de un viajero de primera clase. Es una comprobación muy superficial, pero nos indicará si nuestra hipótesis va por buen camino o no.</p>
 <pre class="r"><code>titanic_file[titanic_file$Fare == max(titanic_file$Fare), c(&quot;Pclass&quot;, &quot;Fare&quot;)]</code></pre>
@@ -927,7 +923,7 @@ titanic_file_train$Cabin &lt;- NULL
 
 # Se comprueba que no aparecen en el fichero
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  8 variables:
+<pre><code>## 'data.frame':    891 obs. of  8 variables:
 ##  $ Survived: Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass  : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex     : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -960,7 +956,7 @@ titanic_file_train$Parch &lt;- as.numeric(titanic_file_train$Parch)
 
 # Se comprueba que el tipo de dato es correcto.
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  9 variables:
+<pre><code>## 'data.frame':    891 obs. of  9 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -971,7 +967,7 @@ str(titanic_file_train)</code></pre>
 ##  $ Embarked  : Factor w/ 4 levels &quot;&quot;,&quot;C&quot;,&quot;Q&quot;,&quot;S&quot;: 4 2 4 4 4 3 4 4 4 2 ...
 ##  $ FamilySize: num  2 2 1 2 1 1 1 5 3 2 ...</code></pre>
 <p>El siguiente paso será analizar dichas variables con una correlación. Para ello se obtiene solamente las variables mencionadas:</p>
-<pre class="r"><code>titanic_corr &lt;- titanic_file_train %&gt;% select(&#39;Age&#39;, &#39;Fare&#39;, &#39;SibSp&#39;, &#39;Parch&#39;, &#39;FamilySize&#39;)
+<pre class="r"><code>titanic_corr &lt;- titanic_file_train %&gt;% select('Age', 'Fare', 'SibSp', 'Parch', 'FamilySize')
 
 # Pequeña comprobación de que la copia se ha hecho correctamente
 head(titanic_corr, 2)</code></pre>
@@ -998,7 +994,7 @@ titanic_file_train$Parch &lt;- NULL
 
 # Se comprueba que no aparecen en el fichero
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  7 variables:
+<pre><code>## 'data.frame':    891 obs. of  7 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -1079,7 +1075,7 @@ tc_pclass %&gt;% kable() %&gt;% kable_styling(bootstrap_options = &quot;striped&
 <p>A simple vista, se puede confirmar que la gran mayoría de muertos al accidente del Titanic eran aquellos que pertenecían a la tercera clase. A continuación se realiza el Test con la tabla de contingencia:</p>
 <pre class="r"><code>chisq.test(tc_pclass) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test
+##  Pearson's Chi-squared test
 ## 
 ## data:  tc_pclass
 ## X-squared = 102.89, df = 2, p-value &lt; 2.2e-16</code></pre>
@@ -1133,7 +1129,7 @@ male
 <p>A simple vista, se puede confirmar que la gran mayoría de los muertos eran hombres, casi 4 veces más que las mujeres. A continuación se realiza el Test con la tabla de contingencia:</p>
 <pre class="r"><code>chisq.test(tc_sex) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+##  Pearson's Chi-squared test with Yates' continuity correction
 ## 
 ## data:  tc_sex
 ## X-squared = 260.72, df = 1, p-value &lt; 2.2e-16</code></pre>
@@ -1198,7 +1194,7 @@ S
 <p>Una vez obtenida la tabla de contingencia, se ejecuta la función para conseguir el valor de Chi-Square, obteniendo un valor inferior al valor significativo de 0.05. Así pues, se debe rechazar la hipótesis nula y afirmar que las variables tienen relación entre sí.</p>
 <pre class="r"><code>chisq.test(tc_embarked) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test
+##  Pearson's Chi-squared test
 ## 
 ## data:  tc_embarked
 ## X-squared = 25.964, df = 2, p-value = 2.301e-06</code></pre>
@@ -1207,7 +1203,7 @@ S
 <h4><span class="header-section-number">5.1.2.4</span> Conclusiones del análisis de las variables</h4>
 <p>Tras el análisis de las variables realizado, llegamos a la conclusión de que las siguientes variables son interesantes utilizarlas para crear el modelo en base a nuestra variable objetivo, la supervivencia al accidente:</p>
 <pre class="r"><code>str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  7 variables:
+<pre><code>## 'data.frame':    891 obs. of  7 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -1269,15 +1265,13 @@ for (i in 1:ncol(titanic_file_train)) {
 ##  Fligner-Killeen test of homogeneity of variances
 ## 
 ## data:  as.numeric(Survived) by Fare
-## Fligner-Killeen:med chi-squared = 259.98, df = 250, p-value =
-## 0.3191</code></pre>
+## Fligner-Killeen:med chi-squared = 259.98, df = 250, p-value = 0.3191</code></pre>
 <pre class="r"><code>fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)</code></pre>
 <pre><code>## 
 ##  Fligner-Killeen test of homogeneity of variances
 ## 
 ## data:  as.numeric(Survived) by FamilySize
-## Fligner-Killeen:med chi-squared = 27.095, df = 8, p-value =
-## 0.0006806</code></pre>
+## Fligner-Killeen:med chi-squared = 27.095, df = 8, p-value = 0.0006806</code></pre>
 <p>Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.</p>
 </div>
 <div id="prueba-estadística-con-mann-whitney" class="section level3">
@@ -1435,10 +1429,10 @@ summary(model)</code></pre>
 ## C5.0.default(x = trainX, y = trainy, rules = TRUE)
 ## 
 ## 
-## C5.0 [Release 2.07 GPL Edition]      Mon Jun 08 16:49:43 2020
+## C5.0 [Release 2.07 GPL Edition]      Mon Jun 08 21:20:05 2020
 ## -------------------------------
 ## 
-## Class specified by attribute `outcome&#39;
+## Class specified by attribute `outcome'
 ## 
 ## Read 594 cases (7 attributes) from undefined.data
 ## 
@@ -1550,7 +1544,7 @@ mat_conf</code></pre>
 <p>Podemos observar que ha clasificado bastante bien los 248 registros, y que se ha confundido en 49, 10 prediciendo supervivencia cuando no lo era, y 39 de viceversa.</p>
 <p>Adicionalmente, se puede utilizar la función ‘crosstable’ de la librería ‘gmodels’ para obtener más detalle de los resultados obtenidos utilizando el set de prueba.</p>
 <pre class="r"><code>library(gmodels)
-CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c(&#39;Reality&#39;, &#39;Prediction&#39;))</code></pre>
+CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c('Reality', 'Prediction'))</code></pre>
 <pre><code>## 
 ##  
 ##    Cell Contents
@@ -1804,20 +1798,16 @@ legend(&quot;bottomright&quot;, legend = c(paste(&quot;Modelo 1. AUC = &quot;, r
 </div>
 </div>
 </div>
-<div id="representación-gráfica-de-los-resultados" class="section level1">
-<h1><span class="header-section-number">6</span> Representación gráfica de los resultados</h1>
-<p><strong>QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI??</strong></p>
-</div>
 <div id="conclusiones-del-análisis" class="section level1">
-<h1><span class="header-section-number">7</span> Conclusiones del análisis</h1>
+<h1><span class="header-section-number">6</span> Conclusiones del análisis</h1>
 <p>A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.</p>
 <p>En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). En primer lugar, se han identificado los valores que debemos considerar como vacíos. Aquellas observaciones que contienen nulos o cadenas vacías son consideradas en primer lugar. Pero para las variables continuas, hemos analizado si los ceros existentes pueden tener sentido o si éstos son también valores perdidos. En el caso de la variable del precio del billete, los ceros han sido descartados y tratados como missing values. Se han aplicado varias técnicas para imputarlos. Aquellas variables numéricas cuya distribución lo permitía, han sido imputadas utilizando su mediana. La variable Fare, lejos de distribuirse normalmente, ha requerido utilizar el método de los k vecinos más próximos para imputar sus valores perdidos (incluyendo los ceros). Por último, para las variables categóricas que presentan datos faltantes, hemos utilizado la moda (al ser muy reducido el número de missing values). Para identificar los valores extremos, se ha estudiado la posibilidad de que existen valores no esperados en las variables categóricas. Para las variables numéricas, hemos utilizado diagramas de caja y la convención de considerar como outlier todo aquel valor que se aleje más de 1.5 veces el rango intercuartiles por encima y por debajo del tercer y primer cuartil, respectivamente. Los valores identificados han sido tomados como buenos, y no se les ha aplicado transformación alguna.</p>
-<p>En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.</p>
+<p>En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. No obstante, el mejor modelo de los tres ha sido el modelo de regresión logarítmico. Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.</p>
 <p>Adicionalmente, tanto la tarea de preanálisis como de análisis de datos ha venido acompañada en todo momento de gráficas y tablas que ayudan a aclarar y confirmar las conclusiones obtenidas.</p>
 <hr />
 </div>
 <div id="bibliografía" class="section level1">
-<h1><span class="header-section-number">8</span> Bibliografía</h1>
+<h1><span class="header-section-number">7</span> Bibliografía</h1>
 <hr />
 <p><strong>Dataset</strong></p>
 <ul>
@@ -1837,7 +1827,7 @@ legend(&quot;bottomright&quot;, legend = c(paste(&quot;Modelo 1. AUC = &quot;, r
 <li>[8] Análisis del R^2 dado un modelo de regresión logarítmico.</li>
 <li>[9] Librería Party: <a href="https://cran.r-project.org/web/packages/party/index.html" class="uri">https://cran.r-project.org/web/packages/party/index.html</a></li>
 <li>[10] Algoritmo Rpart: <a href="https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart" class="uri">https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart</a></li>
-<li>[11] Ejemplo de código utilizando rpart y C50: <a href="http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html" class="uri">http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html</a></li>
+<li>[11] Ejemplo de código utilizando rpart y C50: <a href="http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html">http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html</a></li>
 </ul>
 </div>
 

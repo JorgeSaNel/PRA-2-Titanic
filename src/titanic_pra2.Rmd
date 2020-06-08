@@ -893,10 +893,6 @@ legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc_rpart),
 
 Por su parte, este último modelo nos ofrece un parámetro AUC = 0.83. En el aspecto de la curva ROC, el modelo de regresión logística sigue ofreciendo mejores resultados.
 
-# Representación gráfica de los resultados
-
-**QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI??**
-
 # Conclusiones del análisis
 A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.
 
@@ -904,7 +900,7 @@ En segundo lugar, se han sometido los datos a un preprocesamiento para manejar l
 Para identificar los valores extremos, se ha estudiado la posibilidad de que existen valores no esperados en las variables categóricas. Para las variables numéricas, hemos utilizado diagramas de caja y la convención de considerar como outlier todo aquel valor que se aleje más de 1.5 veces el rango intercuartiles por encima y por debajo del tercer y primer cuartil, respectivamente. Los valores identificados han sido tomados como buenos, y no se les ha aplicado transformación alguna.
 
 En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. 
-A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. 
+A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. No obstante, el mejor modelo de los tres ha sido el modelo de regresión logarítmico.
 Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.
 
 Adicionalmente, tanto la tarea de preanálisis como de análisis de datos ha venido acompañada en todo momento de gráficas y tablas que ayudan a aclarar y confirmar las conclusiones obtenidas.
