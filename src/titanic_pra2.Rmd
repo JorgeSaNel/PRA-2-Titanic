@@ -8,7 +8,7 @@ output:
     number_sections: yes
     theme: cosmo
     toc: yes
-    toc_depth: 2
+    toc_depth: 3
     includes:
       in_header: cabecera.html
   word_document: default
@@ -167,14 +167,12 @@ A partir de este conjunto de datos se plantea la problemática de determinar qu�
 Estos análisis adquieren una gran relevancia ya que nos permite conocer cómo eran las clases sociales de hace 100 años, se puede estudiar su correlación, y evitar así posibles inconsistencias entre clases sociales para los futuros cruceros o eventos, como conseguir que todos tengan la misma probabilidad de sobrevivir independientemente de la situación del pasajero o del dinero que este tenga.
 
 # Integración y selección de los datos
-A lo largo de este apartado se dará respuesta a las variables que son interesantes analizar para encontrar la posibilidad de que un pasajero sobreviva al accidente. Podemos dejar fuera todas las variables que, a priori, no tiene relación con la variable objetivo (sobrevivir al accidente), como podrían ser 'PassengerId', 'Name, 'Cabin' o 'Embarked'. Estas variables, al ser identificadores, no ayudan al modelo. Dicho con otras palabras, no habrá correlación entre estas variables y la posibilidad de sobrevivir. 
+A lo largo de este apartado se dará respuesta a las variables que son interesantes analizar para encontrar la posibilidad de que un pasajero sobreviva al accidente. Aunque la selección de datos es una tarea que se realizará con más detalle en el apartado de Análisis de datos debido a su complejidad, podemos adelantar que algunas de las variables que se pueden dejar fuera son todas aquellas que, a priori, no tiene relación con la variable objetivo (sobrevivir al accidente), como podrían ser 'PassengerId', 'Name, 'Cabin' o 'Ticket'. Estas variables, al ser identificadores, no ayudan al modelo. Dicho con otras palabras, no habrá ninguna relación entre estas variables y la variable objetivo. 
 
 Por otro lado, las variables que sí se analizarán son:
 
-* 'Survived' para conocer si el pasajero sobrevivió o no. Esta variable será, en un modelo supervisado, nuestra variable objetivo a predecir.
-* A su vez, será interesante conocer si las variables 'Pclass', 'Sex', 'Age', 'SibSp', 'Parch' o 'Fare' tiene correlación con la variable clase. 
-
-**NOTA: REVISAR ESTO AL TERMINAR EL TRABAJO POR SI NOS HEMOS DEJADO ALGO**
+* 'Survived' para conocer si el pasajero sobrevivió o no. Esta variable es nuestra variable objetivo a predecir.
+* A su vez, será interesante conocer si las variables 'Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare' o 'Embarked' tiene correlación con la variable 'Survived'. 
 
 # Limpieza de los datos
 
@@ -638,6 +636,18 @@ fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)
 
 Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar  la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.
 
+### Prueba estadística con Mann-Whitney
+La segunda prueba estadística que se aplicará consistirá en un contraste de hipótesis sobre una muestra para determinar si la probabilidad de sobrevivir al accidente es mayor dependiendo de las variables. 
+
+Se debe destacar que un test paramétrico se debe utilizar cuando los datos siguen una distribucción normal, si la muestra es de tamaño inferior a 30. Como en nuestro caso esto no es así ya que la variable no sigue una distribucción normal ni de homogeneidad, se deben utilizar funciones no paramétricas, como podría ser Mann-Whitney. Así pues, se estudia la relación para las variables numéricas del modelo, 'Age' y 'Fare' (FamilySize se queda fuera puesto que sí es homocedástica).
+
+```{r message= FALSE, warning=FALSE}
+wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Age)
+wilcox.test(as.numeric(titanic_file_train$Survived), titanic_file_train$Fare)
+```
+
+Puesto que para ambas variables se obtiene un p-valor menor que el valor de significación fijado, rechazamos la hipótesis nula. Por tanto, podemos concluir que, efectivamente, existe relación entre la variable objetivo y las variables de Edad y Precio.
+
 ## Modelos de predicción
 En el último apartado de este punto de análisis estadístico, se procede a realizar tres modelos de predicción diferentes y comparar cuál es el mejor.
 
@@ -674,9 +684,11 @@ tabla.coeficientes <- matrix(c(1, rsq(modelo_glm_1, adj=TRUE),
 colnames(tabla.coeficientes) <- c("Modelo", "R^2")
 tabla.coeficientes
 ```
+
 Como podemos observar, el modelo que mejor resultado da es el último, el modelo 5, el cual contiene las 6 variables. No obstante, cabe mencionar que el modelo 3, el cual se ha realizado en base a las variables categóricas más la variable numérica Fare, que son dos variables menos, tiene unos resultados bastantes parecidos al modelo 5. 
 
 Otra manera de obtener el mejor modelo es con el parámetro AIC, Akaike information criterion. Cuanto más bajo sea el parámetro, mejor será el modelo. Se comprueba este parámetro para los dos mejores modelos, el modelo 3 y el 5.
+
 ```{r message= FALSE, warning=FALSE}
 summary(modelo_glm_3$aic)
 summary(modelo_glm_5$aic)
@@ -736,43 +748,164 @@ legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc1), 2)),
 
 La métrica del área bajo la curva ROC nos dice que el mejor modelo en términos de sensibilidad y especifidad es el modelo número 5, con un área bajo la curva de 0.86.
 
-### Árbol de decisión - C50
+#### Predicción del Modelo Logarítmico
+Tras confirmar que el mejor modelo logarítmico es el 5, se predice la probabilidad de supervivencia de una nueva persona. 
+
+En este caso, añadimos una chica joven perteneciente a la primera clase. Podemos comprobar que la probabilidad de sobrevivir es de un 96%, bastante alta. Si aplicamos estos mismos valores para un chico, podemos observar que la probabilidad disminuye a un 66%.
 ```{r message= FALSE, warning=FALSE}
-set.seed(1)
-titanic_file_random <- titanic_file_train[sample(nrow(titanic_file_train)),]
+new_female <- data.frame(
+  Pclass = "1",
+  Sex = "female",
+  Age = 25,
+  Fare = 80,
+  Embarked = "C",
+  FamilySize = 1
+)
 
-set.seed(666)
-# Variable objetivo en Y
-y <- titanic_file_random[,1] 
-# Resto de variables en X
-X <- titanic_file_random[,2:7] 
-```
-
-
-
-### Predicciones
-
-#### Modelo Logarítmico
-```{r message= FALSE, warning=FALSE}
-new_person <- data.frame(
-  Pclass = "3",
+new_male <- data.frame(
+  Pclass = "1",
   Sex = "male",
-  Age = 45,
+  Age = 25,
   Fare = 80,
   Embarked = "C",
   FamilySize = 1
 )
 
 # Predecir la supervivencia con el modelo logaritmico
-predict(modelo_glm_5, new_person, type = "response")
-
+predict(modelo_glm_5, new_female, type = "response")
+predict(modelo_glm_5, new_male, type = "response")
 ```
+
+### Árbol de decisión - C50
+El siguiente modelo de predicción que se va a utilizar es el modelo C50, un modelo supervisado que replica un árbol de decisión.
+
+#### Preparación de los datos
+A continuación se preparan los datos para ejecutar correctamente el modelo supervisado. En primer lugar, puesto que la clase 'Embarked' tiene 4 categorías cuando en verdad son 3, se pondrá a la primera categoría el valor 'missing.
+```{r message= FALSE, warning=FALSE}
+levels(titanic_file_train$Embarked)[1] = "missing"
+```
+
+En segundo lugar, sobre el conjunto de datos preprocesado con las 7 variables (variable objetivo más las 6 variables independientes), se procede a dividir el dataset entre la variable objetivo (el diagnóstico) y el resto de variables.
+```{r message= FALSE, warning=FALSE}
+train_file <- titanic_file_train[!is.na(titanic_file_train$Survived),]
+
+set.seed(666)
+# Variable objetivo en Y
+y <- train_file[,1] 
+# Resto de variables en X
+X <- train_file[,2:7] 
+```
+
+A continuación se procede a dividir el dataset en dos con los datos de entrenamiento y de testeo. La manera más óptima de dividir los datos son en 2/3 para el conjunto de entrenamiento y 1/3 para el conjunto de prueba con una función para no tener que hacer el análisis a mano.
+```{r message= FALSE, warning=FALSE}
+indexes = sample(1:nrow(titanic_file_train), size=floor((2/3)*nrow(titanic_file_train)))
+trainX<-X[indexes,]
+trainy<-y[indexes]
+testX<-X[-indexes,]
+testy<-y[-indexes]
+```
+
+#### Implementación del algoritmo
+Tras tener el conjunto de datos dividos en dos, se procede a implementar el modelo con la función C50, propia de la librería 'C50', y a observar los resultados obtenidos:
+```{r message= FALSE, warning=FALSE}
+#install.packages("C50")
+library(C50)
+
+model <- C50::C5.0(trainX, trainy,rules=TRUE )
+summary(model)
+```
+Para este caso, se han analizado 594 casos de los cuales podemos sacar las siguientes conclusiones:
+
+* Sólamente ha clasificado mal 91 casos, lo que hace una tasa de error del 15.3% o, mejor dicho, un acierto de aproximadamente un 85%
+
+Adicionalmente, podemos observar que el modelo ha utilizado todas las variables, obteniendo en más de un 50% la variable Sexo y Edad. El resto de variables parecen no ser tan significativas en este modelo.
+
+#### Gráfico C50
+A continuación se muestra el árbol obtenido que representa las reglas de asociación anteriores:
+```{r message= FALSE, warning=FALSE}
+model <- C50::C5.0(trainX, trainy)
+plot(model)
+```
+
+Por ejemplo, si la persona es de sexo masculino, mayor de 9 años, y con más de 4 miembros en la familia, con más de un 80% de probabilidades la persona no sobrevivirá al accidente.
+
+#### Predecir con muestras no usadas
+Una vez tenemos el modelo, podemos comprobar su calidad prediciendo la clase para los datos de prueba que nos hemos reservado al principio.
+```{r message= FALSE, warning=FALSE}
+predicted_model <- predict(model, testX, type="class" )
+
+print(sprintf("La precisión del árbol es: %.4f %%",100*sum(predicted_model == testy) / length(predicted_model)))
+```
+
+Nuestro modelo predice con un 83% de acierto, lo que lo hace bastante eficaz. Como en este caso se tienen pocas clases, se puede utilizar una matriz de confusión para identificar los tipos de errores cometidos:
+```{r message= FALSE, warning=FALSE}
+mat_conf<-table(testy,Predicted=predicted_model)
+mat_conf
+```
+Podemos observar que ha clasificado bastante bien los 248 registros, y que se ha confundido en 49, 10 prediciendo supervivencia cuando no lo era, y 39 de viceversa.
+
+Adicionalmente, se puede utilizar la función ‘crosstable’ de la librería ‘gmodels’ para obtener más detalle de los resultados obtenidos utilizando el set de prueba.
+```{r message= FALSE, warning=FALSE}
+library(gmodels)
+CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c('Reality', 'Prediction'))
+```
+
+### Aplicación algoritmo RPART
+El último apartado de la esta práctica de algoritmos supervisados es ejecutar el dataset obtenido con otro árbol de decisión. En este caso, se ha utilizado la librería ‘party' [9] y ‘rpart’ [10], ambos en la bibliografía.
+
+El algoritmo RPART es una implantación de CART [Classification and Regression Tree en inglés] de aprendizaje automático supervisado. Este algoritmo se llama así por Recursive PARTitioning. Como C50, rpart usa métricas computacionales para determinar la mejor regla de división de datos entre clases. En cada nodo, rpart minimiza el coeficiente de Gini. Sin embargo, la diferencia respecto a C50 es que rpart() utiliza regresiones predefinidas como primer argumento. La forma de llamar a la función es: variable objetivo ~ variable A de entrada + [resto de variables de entrada]. Como salida se obtiene un árbol de decisión que puede ser usado para asignar o predecir una clase a los datos sin clasificar.
+
+A continuación se ejecuta la función rpart, insertándole nuestra variable objetivo ‘Survived’ y el resto de datos. Se utilizará la división de datos que se hizo previamente en el apartado anterior, donde ‘y’ almacena la variable objetivo y ‘X’ almacena el resto de variables.
+```{r message= FALSE, warning=FALSE}
+# Librerías
+library(rpart)
+library(rpart.plot)
+library(party)
+
+# Algoritmo Rpart
+rpart_data = rpart(y ~ ., data=X, method="class")
+summary(rpart_data)
+```
+La gran diferencia de este algoritmo con C50 es cómo representa el árbol de decisión. Para ello se debe primero crear el esqueleto con la función plot() y luego añadir el texto de decisión con la función text().
+```{r message= FALSE, warning=FALSE}
+plot(rpart_data)
+text(rpart_data)
+```
+
+Debido a que puede ser un poco dificil de entender la gráfica anterior, se puede utilizar la función ‘rpart.plot()’ para obtener una mejor visualización. Los nodos interiores están coloreados en un tono claro de la clase objetivo. El nodo muestra la proporción de cada clase en ese nodo y el porcentaje del conjunto de datos en ese nodo. Los nodos hoja se colorean en función de la clase de nodo. El nodo muestra la proporción de cada clase en ese nodo y el porcentaje de la clase correcta del conjunto de datos en ese nodo. 
+```{r message= FALSE, warning=FALSE}
+rpart.plot(rpart_data, extra = 104, nn = TRUE)
+```
+
+
+Las principales reglas que se obtienen son:
+
+* Si el sexo de la persona es femenino, se asignará con un 62% de precisión a una persona de supervivencia.
+* Si el sexo de la persona es masculino y es mayor de 6.5 años, entonces con un 83% de precisión se asignará como que no sobrevive.
+* Si el sexo de la persona es femenino, y pertenece a una tercera clase, entonces con un 20% de precisión se asignará a una persona de supervivencia.
+
+
+Por último, se utiliza el modelo de predicción para los datos de prueba que no se han usado en el aprendizaje. Podemos observar que la precisión es de un 84%, ligeramente inferior al algoritmo C50.
+```{r message= FALSE, warning=FALSE}
+predicted_model <- predict(rpart_data, testX, type="class" )
+print(sprintf("La precisión del árbol es: %.4f %%",100*sum(predicted_model == testy) / length(predicted_model)))
+```
+
 
 # Representación gráfica de los resultados
 
-** QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI?? **
+**QUÉ GRÁFICAS HAY QUE METER EXACTAMENTE AQUI??**
 
 # Conclusiones del análisis
+A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.
+
+En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). **METER AQUI LAS TECNICAS UTILIZADAS PARA LA LIMPIEZA DE DATOS**
+
+En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. 
+A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. 
+Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.
+
+Adicionalmente, tanto la tarea de preanálisis como de análisis de datos ha venido acompañada en todo momento de gráficas y tablas que ayudan a aclarar y confirmar las conclusiones obtenidas.
 
 ******
 # Bibliografía
@@ -791,5 +924,9 @@ predict(modelo_glm_5, new_person, type = "response")
 * [6] Peter Dalgaard (2008). Introductory statistics with R. Springer Science & Business Media.
 * [7] Wes McKinney (2012). Python for Data Analysis. O’Reilley Media, Inc.
 
-** URLs **
-* Análisis del $R^2$ dado un modelo de regresión logarítmico.
+**URLs**
+
+* [8] Análisis del R^2 dado un modelo de regresión logarítmico.
+* [9] Librería Party: https://cran.r-project.org/web/packages/party/index.html
+* [10] Algoritmo Rpart: https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart
+* [11] Ejemplo de código utilizando rpart y C50: http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html
