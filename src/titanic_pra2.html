@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -376,6 +375,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -447,8 +447,10 @@ summary {
 <li><a href="#aplicación-algoritmo-rpart"><span class="toc-section-number">5.3.3</span> Aplicación algoritmo RPART</a></li>
 </ul></li>
 </ul></li>
-<li><a href="#conclusiones-del-análisis"><span class="toc-section-number">6</span> Conclusiones del análisis</a></li>
-<li><a href="#bibliografía"><span class="toc-section-number">7</span> Bibliografía</a></li>
+<li><a href="#exportación-del-fichero"><span class="toc-section-number">6</span> Exportación del fichero</a></li>
+<li><a href="#conclusiones-del-análisis"><span class="toc-section-number">7</span> Conclusiones del análisis</a></li>
+<li><a href="#tabla-de-participantes"><span class="toc-section-number">8</span> Tabla de participantes</a></li>
+<li><a href="#bibliografía"><span class="toc-section-number">9</span> Bibliografía</a></li>
 </ul>
 </div>
 
@@ -519,15 +521,15 @@ library(ggplot2)
 library(dplyr)
 
 # Guardamos el conjunto de datos test y train en un único dataset
-test &lt;- read.csv(&#39;../dataset/test.csv&#39;,stringsAsFactors = FALSE)
-train &lt;- read.csv(&#39;../dataset/train.csv&#39;, stringsAsFactors = FALSE)
+test &lt;- read.csv('../dataset/test.csv',stringsAsFactors = FALSE)
+train &lt;- read.csv('../dataset/train.csv', stringsAsFactors = FALSE)
 
 # Unimos los dos conjuntos de datos en uno solo
 titanic_file &lt;- bind_rows(train, test)
 
 # Verificamos la estructura del conjunto de datos
 str(titanic_file)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    1309 obs. of  12 variables:
+<pre><code>## 'data.frame':    1309 obs. of  12 variables:
 ##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Survived   : int  0 1 1 1 0 0 0 0 1 1 ...
 ##  $ Pclass     : int  3 1 3 1 3 3 1 3 3 2 ...
@@ -572,7 +574,7 @@ for (i in cols){
 
 # Después de los cambios, analizamos la nueva estructura del conjunto de datos
 str(titanic_file)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    1309 obs. of  12 variables:
+<pre><code>## 'data.frame':    1309 obs. of  12 variables:
 ##  $ PassengerId: int  1 2 3 4 5 6 7 8 9 10 ...
 ##  $ Survived   : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass     : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
@@ -871,35 +873,32 @@ cap_age = quantile(titanic_file$Age)[4] + (1.5 * IQR_age)
 cap_fare = quantile(titanic_file$Fare)[4] + (1.5 * IQR_fare)
 
 sort(titanic_file[titanic_file$Fare &lt; floor_fare | titanic_file$Fare &gt; cap_fare, &quot;Fare&quot;])</code></pre>
-<pre><code>##   [1]  66.6000  66.6000  69.3000  69.3000  69.5500  69.5500  69.5500
-##   [8]  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500
-##  [15]  69.5500  71.0000  71.0000  71.2833  71.2833  73.5000  73.5000
-##  [22]  73.5000  73.5000  73.5000  73.5000  73.5000  75.2417  75.2417
-##  [29]  75.2500  75.2500  76.2917  76.2917  76.7292  76.7292  76.7292
-##  [36]  77.2875  77.2875  77.9583  77.9583  77.9583  78.2667  78.2667
-##  [43]  78.8500  78.8500  78.8500  79.2000  79.2000  79.2000  79.2000
-##  [50]  79.2000  79.2000  79.6500  79.6500  79.6500  80.0000  80.0000
-##  [57]  81.8583  81.8583  81.8583  82.1708  82.1708  82.2667  82.2667
-##  [64]  83.1583  83.1583  83.1583  83.1583  83.1583  83.1583  83.4750
-##  [71]  83.4750  86.5000  86.5000  86.5000  89.1042  89.1042  90.0000
-##  [78]  90.0000  90.0000  90.0000  90.0000  91.0792  91.0792  93.5000
-##  [85]  93.5000  93.5000  93.5000 106.4250 106.4250 106.4250 108.9000
-##  [92] 108.9000 108.9000 110.8833 110.8833 110.8833 110.8833 113.2750
-##  [99] 113.2750 113.2750 120.0000 120.0000 120.0000 120.0000 133.6500
-## [106] 133.6500 134.5000 134.5000 134.5000 134.5000 134.5000 135.6333
-## [113] 135.6333 135.6333 135.6333 136.7792 136.7792 146.5208 146.5208
-## [120] 146.5208 151.5500 151.5500 151.5500 151.5500 151.5500 151.5500
-## [127] 153.4625 153.4625 153.4625 164.8667 164.8667 164.8667 164.8667
-## [134] 211.3375 211.3375 211.3375 211.3375 211.5000 211.5000 211.5000
-## [141] 211.5000 211.5000 221.7792 221.7792 221.7792 221.7792 227.5250
-## [148] 227.5250 227.5250 227.5250 227.5250 247.5208 247.5208 247.5208
-## [155] 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750
-## [162] 263.0000 263.0000 263.0000 263.0000 263.0000 263.0000 512.3292
+<pre><code>##   [1]  66.6000  66.6000  69.3000  69.3000  69.5500  69.5500  69.5500  69.5500
+##   [9]  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  69.5500  71.0000
+##  [17]  71.0000  71.2833  71.2833  73.5000  73.5000  73.5000  73.5000  73.5000
+##  [25]  73.5000  73.5000  75.2417  75.2417  75.2500  75.2500  76.2917  76.2917
+##  [33]  76.7292  76.7292  76.7292  77.2875  77.2875  77.9583  77.9583  77.9583
+##  [41]  78.2667  78.2667  78.8500  78.8500  78.8500  79.2000  79.2000  79.2000
+##  [49]  79.2000  79.2000  79.2000  79.6500  79.6500  79.6500  80.0000  80.0000
+##  [57]  81.8583  81.8583  81.8583  82.1708  82.1708  82.2667  82.2667  83.1583
+##  [65]  83.1583  83.1583  83.1583  83.1583  83.1583  83.4750  83.4750  86.5000
+##  [73]  86.5000  86.5000  89.1042  89.1042  90.0000  90.0000  90.0000  90.0000
+##  [81]  90.0000  91.0792  91.0792  93.5000  93.5000  93.5000  93.5000 106.4250
+##  [89] 106.4250 106.4250 108.9000 108.9000 108.9000 110.8833 110.8833 110.8833
+##  [97] 110.8833 113.2750 113.2750 113.2750 120.0000 120.0000 120.0000 120.0000
+## [105] 133.6500 133.6500 134.5000 134.5000 134.5000 134.5000 134.5000 135.6333
+## [113] 135.6333 135.6333 135.6333 136.7792 136.7792 146.5208 146.5208 146.5208
+## [121] 151.5500 151.5500 151.5500 151.5500 151.5500 151.5500 153.4625 153.4625
+## [129] 153.4625 164.8667 164.8667 164.8667 164.8667 211.3375 211.3375 211.3375
+## [137] 211.3375 211.5000 211.5000 211.5000 211.5000 211.5000 221.7792 221.7792
+## [145] 221.7792 221.7792 227.5250 227.5250 227.5250 227.5250 227.5250 247.5208
+## [153] 247.5208 247.5208 262.3750 262.3750 262.3750 262.3750 262.3750 262.3750
+## [161] 262.3750 263.0000 263.0000 263.0000 263.0000 263.0000 263.0000 512.3292
 ## [169] 512.3292 512.3292 512.3292</code></pre>
 <pre class="r"><code>sort(titanic_file[titanic_file$Age &lt; floor_age | titanic_file$Age &gt; cap_age, &quot;Age&quot;])</code></pre>
-<pre><code>##  [1] 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.5 61.0 61.0 61.0 61.0 61.0 62.0
-## [15] 62.0 62.0 62.0 62.0 63.0 63.0 63.0 63.0 64.0 64.0 64.0 64.0 64.0 65.0
-## [29] 65.0 65.0 66.0 67.0 70.0 70.0 70.5 71.0 71.0 74.0 76.0 80.0</code></pre>
+<pre><code>##  [1] 60.0 60.0 60.0 60.0 60.0 60.0 60.0 60.5 61.0 61.0 61.0 61.0 61.0 62.0 62.0
+## [16] 62.0 62.0 62.0 63.0 63.0 63.0 63.0 64.0 64.0 64.0 64.0 64.0 65.0 65.0 65.0
+## [31] 66.0 67.0 70.0 70.0 70.5 71.0 71.0 74.0 76.0 80.0</code></pre>
 <p>En las listas de datos proporcionadas (ordenadas de mayor a menor), se puede apreciar que el valor máximo para la edad es de 80 años, lo cual es más que posible que se trate de un valor correcto, y que por tanto no debemos transformar. Siguiendo el mismo razonamiento, el resto de valores también permanecerán intactos.</p>
 <p>Por parte de la variable Fare, encontramos varios valores inusualmente altos. Se trata de un precio de billete por encima de los 500 dólares. Es sospechoso, pero encontramos 4 observaciones distintas con exactamente el mismo precio. Esto nos sugiere que perfectamente se puede tratar de un billete de lujo. De ser así, debería tratarse de un viajero de primera clase. Es una comprobación muy superficial, pero nos indicará si nuestra hipótesis va por buen camino o no.</p>
 <pre class="r"><code>titanic_file[titanic_file$Fare == max(titanic_file$Fare), c(&quot;Pclass&quot;, &quot;Fare&quot;)]</code></pre>
@@ -927,7 +926,7 @@ titanic_file_train$Cabin &lt;- NULL
 
 # Se comprueba que no aparecen en el fichero
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  8 variables:
+<pre><code>## 'data.frame':    891 obs. of  8 variables:
 ##  $ Survived: Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass  : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex     : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -960,7 +959,7 @@ titanic_file_train$Parch &lt;- as.numeric(titanic_file_train$Parch)
 
 # Se comprueba que el tipo de dato es correcto.
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  9 variables:
+<pre><code>## 'data.frame':    891 obs. of  9 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -971,7 +970,7 @@ str(titanic_file_train)</code></pre>
 ##  $ Embarked  : Factor w/ 4 levels &quot;&quot;,&quot;C&quot;,&quot;Q&quot;,&quot;S&quot;: 4 2 4 4 4 3 4 4 4 2 ...
 ##  $ FamilySize: num  2 2 1 2 1 1 1 5 3 2 ...</code></pre>
 <p>El siguiente paso será analizar dichas variables con una correlación. Para ello se obtiene solamente las variables mencionadas:</p>
-<pre class="r"><code>titanic_corr &lt;- titanic_file_train %&gt;% select(&#39;Age&#39;, &#39;Fare&#39;, &#39;SibSp&#39;, &#39;Parch&#39;, &#39;FamilySize&#39;)
+<pre class="r"><code>titanic_corr &lt;- titanic_file_train %&gt;% select('Age', 'Fare', 'SibSp', 'Parch', 'FamilySize')
 
 # Pequeña comprobación de que la copia se ha hecho correctamente
 head(titanic_corr, 2)</code></pre>
@@ -998,7 +997,7 @@ titanic_file_train$Parch &lt;- NULL
 
 # Se comprueba que no aparecen en el fichero
 str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  7 variables:
+<pre><code>## 'data.frame':    891 obs. of  7 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -1079,7 +1078,7 @@ tc_pclass %&gt;% kable() %&gt;% kable_styling(bootstrap_options = &quot;striped&
 <p>A simple vista, se puede confirmar que la gran mayoría de muertos al accidente del Titanic eran aquellos que pertenecían a la tercera clase. A continuación se realiza el Test con la tabla de contingencia:</p>
 <pre class="r"><code>chisq.test(tc_pclass) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test
+##  Pearson's Chi-squared test
 ## 
 ## data:  tc_pclass
 ## X-squared = 102.89, df = 2, p-value &lt; 2.2e-16</code></pre>
@@ -1133,7 +1132,7 @@ male
 <p>A simple vista, se puede confirmar que la gran mayoría de los muertos eran hombres, casi 4 veces más que las mujeres. A continuación se realiza el Test con la tabla de contingencia:</p>
 <pre class="r"><code>chisq.test(tc_sex) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+##  Pearson's Chi-squared test with Yates' continuity correction
 ## 
 ## data:  tc_sex
 ## X-squared = 260.72, df = 1, p-value &lt; 2.2e-16</code></pre>
@@ -1198,7 +1197,7 @@ S
 <p>Una vez obtenida la tabla de contingencia, se ejecuta la función para conseguir el valor de Chi-Square, obteniendo un valor inferior al valor significativo de 0.05. Así pues, se debe rechazar la hipótesis nula y afirmar que las variables tienen relación entre sí.</p>
 <pre class="r"><code>chisq.test(tc_embarked) </code></pre>
 <pre><code>## 
-##  Pearson&#39;s Chi-squared test
+##  Pearson's Chi-squared test
 ## 
 ## data:  tc_embarked
 ## X-squared = 25.964, df = 2, p-value = 2.301e-06</code></pre>
@@ -1207,7 +1206,7 @@ S
 <h4><span class="header-section-number">5.1.2.4</span> Conclusiones del análisis de las variables</h4>
 <p>Tras el análisis de las variables realizado, llegamos a la conclusión de que las siguientes variables son interesantes utilizarlas para crear el modelo en base a nuestra variable objetivo, la supervivencia al accidente:</p>
 <pre class="r"><code>str(titanic_file_train)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    891 obs. of  7 variables:
+<pre><code>## 'data.frame':    891 obs. of  7 variables:
 ##  $ Survived  : Factor w/ 2 levels &quot;0&quot;,&quot;1&quot;: 1 2 2 2 1 1 1 1 2 2 ...
 ##  $ Pclass    : Factor w/ 3 levels &quot;1&quot;,&quot;2&quot;,&quot;3&quot;: 3 1 3 1 3 3 1 3 3 2 ...
 ##  $ Sex       : Factor w/ 2 levels &quot;female&quot;,&quot;male&quot;: 2 1 1 1 2 2 2 2 1 1 ...
@@ -1269,15 +1268,13 @@ for (i in 1:ncol(titanic_file_train)) {
 ##  Fligner-Killeen test of homogeneity of variances
 ## 
 ## data:  as.numeric(Survived) by Fare
-## Fligner-Killeen:med chi-squared = 259.98, df = 250, p-value =
-## 0.3191</code></pre>
+## Fligner-Killeen:med chi-squared = 259.98, df = 250, p-value = 0.3191</code></pre>
 <pre class="r"><code>fligner.test(as.numeric(Survived) ~ FamilySize, data = titanic_file_train)</code></pre>
 <pre><code>## 
 ##  Fligner-Killeen test of homogeneity of variances
 ## 
 ## data:  as.numeric(Survived) by FamilySize
-## Fligner-Killeen:med chi-squared = 27.095, df = 8, p-value =
-## 0.0006806</code></pre>
+## Fligner-Killeen:med chi-squared = 27.095, df = 8, p-value = 0.0006806</code></pre>
 <p>Se puede observar que para las variables de Edad y Fare se obtiene un p-valor superior a 0.05 (Age ~ 0.9 y Fare ~ 0.32) por lo que se debe aceptar la hipótesis de que las varianzas de ambas muestras son homogéneas. Para el resto de variables, al ser el p-valor inferior al intervalo de confianza, no podemos decir que sean homogéneas.</p>
 </div>
 <div id="prueba-estadística-con-mann-whitney" class="section level3">
@@ -1435,10 +1432,10 @@ summary(model)</code></pre>
 ## C5.0.default(x = trainX, y = trainy, rules = TRUE)
 ## 
 ## 
-## C5.0 [Release 2.07 GPL Edition]      Mon Jun 08 21:56:19 2020
+## C5.0 [Release 2.07 GPL Edition]      Mon Jun 08 22:50:27 2020
 ## -------------------------------
 ## 
-## Class specified by attribute `outcome&#39;
+## Class specified by attribute `outcome'
 ## 
 ## Read 594 cases (7 attributes) from undefined.data
 ## 
@@ -1550,7 +1547,7 @@ mat_conf</code></pre>
 <p>Podemos observar que ha clasificado bastante bien los 248 registros, y que se ha confundido en 49, 10 prediciendo supervivencia cuando no lo era, y 39 de viceversa.</p>
 <p>Adicionalmente, se puede utilizar la función ‘crosstable’ de la librería ‘gmodels’ para obtener más detalle de los resultados obtenidos utilizando el set de prueba.</p>
 <pre class="r"><code>library(gmodels)
-CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c(&#39;Reality&#39;, &#39;Prediction&#39;))</code></pre>
+CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c('Reality', 'Prediction'))</code></pre>
 <pre><code>## 
 ##  
 ##    Cell Contents
@@ -1800,20 +1797,41 @@ plot(roc_rpart, col = &quot;blue&quot;, main = &quot;Curva ROC - Árbol CART&quo
 legend(&quot;bottomright&quot;, legend = c(paste(&quot;Modelo 1. AUC = &quot;, round(auc(roc_rpart), 2))), col = c(&quot;blue&quot;), pch = c(&quot;--&quot;), ncol = 1)</code></pre>
 <p><img src="data:image/png;base64,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" width="672" /></p>
 <p>Por su parte, este último modelo nos ofrece un parámetro AUC = 0.83. En el aspecto de la curva ROC, el modelo de regresión logística sigue ofreciendo mejores resultados.</p>
+<hr />
 </div>
 </div>
 </div>
+</div>
+<div id="exportación-del-fichero" class="section level1">
+<h1><span class="header-section-number">6</span> Exportación del fichero</h1>
+<hr />
+<p>Por último, tras terminar la práctica, se exporta el fichero limpio utilizado para la generación de los modelos predictivos a un formato CSV:</p>
+<pre class="r"><code>write.csv(titanic_file_train, &quot;../dataset/Titanic_Final.csv&quot;)</code></pre>
+<hr />
 </div>
 <div id="conclusiones-del-análisis" class="section level1">
-<h1><span class="header-section-number">6</span> Conclusiones del análisis</h1>
+<h1><span class="header-section-number">7</span> Conclusiones del análisis</h1>
+<hr />
 <p>A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.</p>
 <p>En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). En primer lugar, se han identificado los valores que debemos considerar como vacíos. Aquellas observaciones que contienen nulos o cadenas vacías son consideradas en primer lugar. Pero para las variables continuas, hemos analizado si los ceros existentes pueden tener sentido o si éstos son también valores perdidos. En el caso de la variable del precio del billete, los ceros han sido descartados y tratados como missing values. Se han aplicado varias técnicas para imputarlos. Aquellas variables numéricas cuya distribución lo permitía, han sido imputadas utilizando su mediana. La variable Fare, lejos de distribuirse normalmente, ha requerido utilizar el método de los k vecinos más próximos para imputar sus valores perdidos (incluyendo los ceros). Por último, para las variables categóricas que presentan datos faltantes, hemos utilizado la moda (al ser muy reducido el número de missing values). Para identificar los valores extremos, se ha estudiado la posibilidad de que existen valores no esperados en las variables categóricas. Para las variables numéricas, hemos utilizado diagramas de caja y la convención de considerar como outlier todo aquel valor que se aleje más de 1.5 veces el rango intercuartiles por encima y por debajo del tercer y primer cuartil, respectivamente. Los valores identificados han sido tomados como buenos, y no se les ha aplicado transformación alguna.</p>
 <p>En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. No obstante, el mejor modelo de los tres ha sido el modelo de regresión logarítmico. Durante este apartado se ha llegado a la conclusión de que había más probabilidades de sobrevivir si la persona del crucero era una chica, perteneciente a la primera clase social, y joven. El resto de variables, aunque ayudan a crear el modelo, no son tan representativas como estas tres.</p>
 <p>Adicionalmente, tanto la tarea de preanálisis como de análisis de datos ha venido acompañada en todo momento de gráficas y tablas que ayudan a aclarar y confirmar las conclusiones obtenidas.</p>
 <hr />
 </div>
+<div id="tabla-de-participantes" class="section level1">
+<h1><span class="header-section-number">8</span> Tabla de participantes</h1>
+<hr />
+<p>A continuación se muestra la tabla de participantes firmada por ambos.</p>
+<pre><code>##                                  Firma Jorge Santos Firma Javier Cela
+## Contribuciones                   JSN                JCL              
+## Investigación previa             JSN                JCL              
+## Limpieza de los datos            JSN                JCL              
+## Análisis de los datos            JSN                JCL              
+## Representación de los resultados JSN                JCL</code></pre>
+<hr />
+</div>
 <div id="bibliografía" class="section level1">
-<h1><span class="header-section-number">7</span> Bibliografía</h1>
+<h1><span class="header-section-number">9</span> Bibliografía</h1>
 <hr />
 <p><strong>Dataset</strong></p>
 <ul>
@@ -1833,7 +1851,7 @@ legend(&quot;bottomright&quot;, legend = c(paste(&quot;Modelo 1. AUC = &quot;, r
 <li>[8] Análisis del R^2 dado un modelo de regresión logarítmico.</li>
 <li>[9] Librería Party: <a href="https://cran.r-project.org/web/packages/party/index.html" class="uri">https://cran.r-project.org/web/packages/party/index.html</a></li>
 <li>[10] Algoritmo Rpart: <a href="https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart" class="uri">https://www.rdocumentation.org/packages/rpart/versions/4.1-15/topics/rpart</a></li>
-<li>[11] Ejemplo de código utilizando rpart y C50: <a href="http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html" class="uri">http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html</a></li>
+<li>[11] Ejemplo de código utilizando rpart y C50: <a href="http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html">http://mercury.webster.edu/aleshunas/R_learning_infrastructure/Classification%20of%20data%20using%20decision%20tree%20and%20regression%20tree%20methods.html</a></li>
 </ul>
 </div>
 

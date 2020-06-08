@@ -5,6 +5,13 @@ Este repositorio está dedicado a la resolución de la segunda práctica de la a
 
 Tras descargar los datos, a lo largo de la práctica se hará un pre-análisis de los datos con una limpieza de los mismos. El siguiente paso corresponde al análisis de los datos, utilizando tres métodos de análisis diferentes. En primer lugar, se estudiarán las variables relevantes respecto a la variable objetivo, la supervivencia, así como la normalidad y homogeneidad de las variables. Por último, se realizarán tres modelos de predicción, compuesto por un modelo de regresión logarítmica y dos modelos supervisados de clasificación (C50 y Rpart)
 
+## Organización
+El proyecto está compuesto de tres carpetas, entre las que podemos encontrar:
+
+* dataset: Contiene los ficheros origen y el fichero final tras haber realizado la limpieza de datos y haber aplicado el algoritmo
+* pdf: Contiene dos PDFs, el enunciado y el documento con las respuestas a las preguntas
+* src: Contiene tres ficheros, entre los que podemos encontrar el código principal de la práctica (titanic_pra2.Rmd), el documento HTML generado (titanic_pra2.html) y, por último, la cabecera utilizada para dar formato a la entrega.
+
 ## Miembros del equipo
 La actividad se ha realizado en un grupo de dos personas formado por:
 
