@@ -655,7 +655,7 @@ En el último apartado de este punto de análisis estadístico, se procede a rea
 * A continuación se utilizará el modelo de clasificación supervisado C50 que corresponde a un árbol de decisión.
 * Por último, se utilizará otro algoritmo de árbol de decisión como es el RPART.
 
-### Regresión logarítmia
+### Regresión logarítmica
 En primer lugar, se procede a generar una regresión logarítmica múltiple con la función __glm__. Esta función recibe tres parámetros, siendo la primera la variable objetivo, la segunda las variables independientes, y en tercer lugar el set de datos. Adicionalmente, le indicamos que la familia elegida para el modelo es la binomial puesto que la variable objetivo es dicotómica.
 
 Tal y como se ha visto, las 6 variables analizadas, a parte de la variable objetivo, son relevantes para el modelo. No obstante, se crean diferentes modelos logarítmicos con diferentes variables para analizar cúal es el que mejor resultados obtiene.
@@ -696,6 +696,8 @@ summary(modelo_glm_5$aic)
 
 Se puede comprobar que el parámetro AIC para el Modelo 3 es de 814, mientras que en el Modelo 5 tiene un valor de 801. Así pues, entre los modelos de regresión logarítmico, el mejor modelo es el utilizado con todas las variables, el **Modelo 5**.
 
+#### Curva ROC
+
 Para ahondar más en el análisis de los modelos construidos, dibujaremos su curva ROC. Esto nos ofrecerá una visión de su sensibilidad (capacidad del modelo para identificar verdaderos positivos) y la relación con su especifidad (capacidad del modelo para identificar verdaderos negativos). El área bajo esta curva nos ofrece otra medida de la bondad del modelo, siendo 1 el valor máximo y 0.5 el mínimo. Un aspecto bueno de este análisis es que es insensible completamente a la distribución de las clases en los datos. Pongamos por ejemplo que de 1000 personas observadas, 999 hubieran sobrevivido al accidente del Titanic. Un modelo que dijera siempre que la persona observada ha sobrevivido ofrecería una precisión del 99.9 %, pero realmente este no sería un buen modelo y analizar únicamente la precisión nos llevaría a conclusiones erróneas. Este modelo tendría una sensibilidad enorme, pero su especificidad sería pésima, ya que no sería capaz de identificar verdaderos negativos. La curva ROC, por el contrario, nos revelaría la verdad acerca de este modelo.
 
 ```{r message= FALSE, warning=FALSE}
@@ -709,40 +711,12 @@ roc3 <- roc(titanic_file_train$Survived, modelo_glm_3$fitted.value)
 roc4 <- roc(titanic_file_train$Survived, modelo_glm_4$fitted.value)
 roc5 <- roc(titanic_file_train$Survived, modelo_glm_5$fitted.value)
 
-sensibilidad = rbind(c(1:99), c(1:99), c(1:99), c(1:99), c(1:99))
-especificidad = rbind(c(1:99), c(1:99), c(1:99), c(1:99), c(1:99))
-
-for (i in c(1:99)) {
-  
-  mat1 <- data.frame(table(titanic_file_train$Survived, modelo_glm_1$fitted.values > i/100))
-  sensibilidad[1, i] <- ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat1[mat1$Var1 == 1 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 1 & mat1$Var2 == "FALSE", "Freq"]))
-  especificidad[1, i] <- ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat1[mat1$Var1 == 0 & mat1$Var2 == "TRUE", "Freq"]), 0, mat1[mat1$Var1 == 0 & mat1$Var2 == "TRUE", "Freq"]))
-  
-  mat2 <- data.frame(table(titanic_file_train$Survived, modelo_glm_2$fitted.values > i/100))
-  sensibilidad[2, i] <- ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat2[mat2$Var1 == 1 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 1 & mat2$Var2 == "FALSE", "Freq"]))
-  especificidad[2, i] <- ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat2[mat2$Var1 == 0 & mat2$Var2 == "TRUE", "Freq"]), 0, mat2[mat2$Var1 == 0 & mat2$Var2 == "TRUE", "Freq"]))
-  
-  mat3 <- data.frame(table(titanic_file_train$Survived, modelo_glm_3$fitted.values > i/100))
-  sensibilidad[3, i] <- ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat3[mat3$Var1 == 1 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 1 & mat3$Var2 == "FALSE", "Freq"]))
-  especificidad[3, i] <- ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat3[mat3$Var1 == 0 & mat3$Var2 == "TRUE", "Freq"]), 0, mat3[mat3$Var1 == 0 & mat3$Var2 == "TRUE", "Freq"]))
-  
-  mat4 <- data.frame(table(titanic_file_train$Survived, modelo_glm_4$fitted.values > i/100))
-  sensibilidad[4, i] <- ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat4[mat4$Var1 == 1 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 1 & mat4$Var2 == "FALSE", "Freq"]))
-  especificidad[4, i] <- ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat4[mat4$Var1 == 0 & mat4$Var2 == "TRUE", "Freq"]), 0, mat4[mat4$Var1 == 0 & mat4$Var2 == "TRUE", "Freq"]))
-  
-  mat5 <- data.frame(table(titanic_file_train$Survived, modelo_glm_5$fitted.values > i/100))
-  sensibilidad[5, i] <- ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]) / (ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "TRUE", "Freq"]) + ifelse(is.empty(mat5[mat5$Var1 == 1 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 1 & mat5$Var2 == "FALSE", "Freq"]))
-  especificidad[5, i] <- ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]) / (ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "FALSE", "Freq"]) + ifelse(is.empty(mat5[mat5$Var1 == 0 & mat5$Var2 == "TRUE", "Freq"]), 0, mat5[mat5$Var1 == 0 & mat5$Var2 == "TRUE", "Freq"]))
-  
-}
-
-plot(c(1:101)/100, c(1:101)/100, type = "l", col = "black", main = "Curvas ROC", xlab = "1 - especificidad", ylab = "sensibilidad")
-lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[1,], 0), type = "l", col = "blue")
-lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[2,], 0), type = "l", col = "green")
-lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[3,], 0), type = "l", col = "red")
-lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[4,], 0), type = "l", col = "purple")
-lines(1 - c(0, especificidad[1,], 1), c(1, sensibilidad[5,], 0), type = "l", col = "orange")
-legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc1), 2)), paste("Modelo 2. AUC = ", round(auc(roc2), 2)), paste("Modelo 3. AUC = ", round(auc(roc3), 2)), paste("Modelo 4. AUC = ", round(auc(roc4), 2)), paste("Modelo 5. AUC = ", round(auc(roc5), 2))), col = c("blue", "green", "red", "purple", "orange"), pch = c("--", "--", "--", "--", "--"), ncol = 1)
+plot(roc1, col = "blue", main = "Curva ROC - Regresiones logísticas", xlab = "1 - especificidad", ylab = "sensibilidad")
+lines(roc2, type = "l", col = "red")
+lines(roc3, type = "l", col = "green")
+lines(roc4, type = "l", col = "orange")
+lines(roc5, type = "l", col = "purple")
+legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc1), 2)), paste("Modelo 2. AUC = ", round(auc(roc2), 2)), paste("Modelo 3. AUC = ", round(auc(roc3), 2)), paste("Modelo 4. AUC = ", round(auc(roc4), 2)), paste("Modelo 5. AUC = ", round(auc(roc5), 2))), col = c("blue", "red", "green", "orange", "purple"), pch = c("-", "-", "-", "-", "-"), ncol = 1)
 
 ```
 
@@ -850,6 +824,21 @@ library(gmodels)
 CrossTable(testy, predicted_model,prop.chisq  = FALSE, prop.c = FALSE, prop.r =FALSE,dnn = c('Reality', 'Prediction'))
 ```
 
+#### Curva ROC
+
+Al igual que hemos hecho para el modelo de regresión logística, construiremos la curva ROC del modelo de árbol de clasificación a fin de establecer una comparación completa. Recordemos que la curva ROC de referencia del modelo de regresión nos dejaba un área bajo la curva de 0.86.
+
+```{r message= FALSE, warning=FALSE}
+
+roc_c50 <- roc(as.numeric(testy), as.numeric(predicted_model))
+
+plot(roc_c50, col = "blue", main = "Curva ROC - Árbol C50", xlab = "1 - especificidad", ylab = "sensibilidad")
+legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc_c50), 2))), col = c("blue"), pch = c("--"), ncol = 1)
+
+```
+
+La curva ROC de este modelo nos ofrece un parámetro AUC = 0.81. Este análisis nos sugiere que el modelo de árbol es ligeramente peor al modelo de regresión, al menos en términos de sensibilidad frente a especifidad.
+
 ### Aplicación algoritmo RPART
 El último apartado de la esta práctica de algoritmos supervisados es ejecutar el dataset obtenido con otro árbol de decisión. En este caso, se ha utilizado la librería ‘party' [9] y ‘rpart’ [10], ambos en la bibliografía.
 
@@ -877,20 +866,32 @@ Debido a que puede ser un poco dificil de entender la gráfica anterior, se pued
 rpart.plot(rpart_data, extra = 104, nn = TRUE)
 ```
 
-
 Las principales reglas que se obtienen son:
 
 * Si el sexo de la persona es femenino, se asignará con un 62% de precisión a una persona de supervivencia.
 * Si el sexo de la persona es masculino y es mayor de 6.5 años, entonces con un 83% de precisión se asignará como que no sobrevive.
 * Si el sexo de la persona es femenino, y pertenece a una tercera clase, entonces con un 20% de precisión se asignará a una persona de supervivencia.
 
-
 Por último, se utiliza el modelo de predicción para los datos de prueba que no se han usado en el aprendizaje. Podemos observar que la precisión es de un 84%, ligeramente inferior al algoritmo C50.
 ```{r message= FALSE, warning=FALSE}
-predicted_model <- predict(rpart_data, testX, type="class" )
+predicted_model <- predict(rpart_data, testX, type="class")
 print(sprintf("La precisión del árbol es: %.4f %%",100*sum(predicted_model == testy) / length(predicted_model)))
 ```
 
+#### Curva ROC
+
+Como ya hemos hecho con los modelos anteriores, además de calcular la precisión, dibujaremos la curva ROC de este último árbol para ofrece una medida más de la bondad del modelo.
+
+```{r message= FALSE, warning=FALSE}
+
+roc_rpart <- roc(as.numeric(testy), as.numeric(predicted_model))
+
+plot(roc_rpart, col = "blue", main = "Curva ROC - Árbol CART", xlab = "1 - especificidad", ylab = "sensibilidad")
+legend("bottomright", legend = c(paste("Modelo 1. AUC = ", round(auc(roc_rpart), 2))), col = c("blue"), pch = c("--"), ncol = 1)
+
+```
+
+Por su parte, este último modelo nos ofrece un parámetro AUC = 0.83. En el aspecto de la curva ROC, el modelo de regresión logística sigue ofreciendo mejores resultados.
 
 # Representación gráfica de los resultados
 
@@ -899,7 +900,8 @@ print(sprintf("La precisión del árbol es: %.4f %%",100*sum(predicted_model == 
 # Conclusiones del análisis
 A lo largo de esta práctica se ha aprendido a realizar un análisis de datos de principio a fin. En primer lugar, se hizo un estudio exhaustivo del conjunto de datos más óptimo que se debía utilizar para dar respuesta a las preguntas formuladas. Finalmente, se optó por utilizar el dataset con la información de los pasajeros del Titanic proporcionado por Kaggle.
 
-En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). **METER AQUI LAS TECNICAS UTILIZADAS PARA LA LIMPIEZA DE DATOS**
+En segundo lugar, se han sometido los datos a un preprocesamiento para manejar los casos de ceros o elementos vacíos y valores extremos (outliers). En primer lugar, se han identificado los valores que debemos considerar como vacíos. Aquellas observaciones que contienen nulos o cadenas vacías son consideradas en primer lugar. Pero para las variables continuas, hemos analizado si los ceros existentes pueden tener sentido o si éstos son también valores perdidos. En el caso de la variable del precio del billete, los ceros han sido descartados y tratados como missing values. Se han aplicado varias técnicas para imputarlos. Aquellas variables numéricas cuya distribución lo permitía, han sido imputadas utilizando su mediana. La variable Fare, lejos de distribuirse normalmente, ha requerido utilizar el método de los k vecinos más próximos para imputar sus valores perdidos (incluyendo los ceros). Por último, para las variables categóricas que presentan datos faltantes, hemos utilizado la moda (al ser muy reducido el número de missing values).
+Para identificar los valores extremos, se ha estudiado la posibilidad de que existen valores no esperados en las variables categóricas. Para las variables numéricas, hemos utilizado diagramas de caja y la convención de considerar como outlier todo aquel valor que se aleje más de 1.5 veces el rango intercuartiles por encima y por debajo del tercer y primer cuartil, respectivamente. Los valores identificados han sido tomados como buenos, y no se les ha aplicado transformación alguna.
 
 En tercer lugar, se ha realizado el análisis estadístico de los datos. En este apartado se ha elegido el conjunto de datos que mejor ayudaban a crear el modelo para predecir la variable objetivo, la variable de supervivencia. Para ello se han utilizado técnicas de correlación, para las variables numéricas, y el Test de Chi-Square para las variables categóricas basándonos en las hipótesis. Adicionalmente, se ha realizado un estudio de normalidad y homogeneidad entre las variables numéricas. Puesto que las variables no seguían una normal ni homocedasticidad, se ha obtenido la relación de las variables numéricas respecto a la variable objetivo con un test de Mann Whitney. 
 A continuación, se han creado tres modelos de predicción, los cuales son el modelo de regresión múltiple logarítmico, y dos modelos supervisados de clasificación basados en árboles de decisión, utilizando el algoritmo de C50 y Rpart. Hemos comprobado que, de estos dos últimos modelos, el C50 daba mejores resultados y conseguía predecir con más precisión. 
