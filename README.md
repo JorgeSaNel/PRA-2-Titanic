@@ -8,8 +8,8 @@ Tras descargar los datos, a lo largo de la práctica se hará un pre-análisis d
 ## Organización
 El proyecto está compuesto de tres carpetas, entre las que podemos encontrar:
 
-* dataset: Contiene los ficheros origen y el fichero final tras haber realizado la limpieza de datos y haber aplicado el algoritmo
-* pdf: Contiene dos PDFs, el enunciado y el documento con las respuestas a las preguntas
+* dataset: Contiene los ficheros origen y el fichero final tras haber realizado la limpieza de datos y haber aplicado los modelos predictivos.
+* pdf: Contiene dos PDFs, el enunciado y el documento con las respuestas a las preguntas.
 * src: Contiene tres ficheros, entre los que podemos encontrar el código principal de la práctica (titanic_pra2.Rmd), el documento HTML generado (titanic_pra2.html) y, por último, la cabecera utilizada para dar formato a la entrega.
 
 ## Miembros del equipo
