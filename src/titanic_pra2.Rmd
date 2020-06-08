@@ -195,7 +195,8 @@ Antes de comenzar, analizaremos también la existencia de ceros en las variables
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 
-colSums(titanic_file[, c("Age", "Fare")] == 0)
+length(titanic_file[which(titanic_file$Fare == 0 & titanic_file$Age == 0),]$Fare)
+length(titanic_file[which(titanic_file$Age == 0),]$Age)
 
 ```
 
