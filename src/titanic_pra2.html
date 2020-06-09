@@ -643,8 +643,8 @@ ggplot(data = titanic_file1[!(is.na(titanic_file[1:filas,]$Age)),],aes(x=Age,fil
 ##           0           0           0          NA        1014           2</code></pre>
 <p>Observamos dos tipos de missing values: valores con NA y valores con cadenas vacías. A efectos prácticos, serán tratados de igual forma unos y otros.</p>
 <p>Antes de comenzar, analizaremos también la existencia de ceros en las variables continuas, y nos plantearemos si tiene sentido que existan o si debemos tratarlos como valores vacíos. Estudiaremos las variables Age y Fare.</p>
-<pre class="r"><code>length(titanic_file[which(titanic_file$Fare == 0 &amp; titanic_file$Age == 0),]$Fare)</code></pre>
-<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>length(titanic_file[which(titanic_file$Fare == 0),]$Fare)</code></pre>
+<pre><code>## [1] 15</code></pre>
 <pre class="r"><code>length(titanic_file[which(titanic_file$Age == 0),]$Age)</code></pre>
 <pre><code>## [1] 0</code></pre>
 <p>Encontramos ceros en la variable Fare. A priori, es una variable en la que no tiene sentido la existencia de ceros. Es esperable que todos los pasajeros hayan pagado un precio por su billete, por lo que consideramos que estos datos deberán tratarse como valores vacíos y serán incluidos en el tratamiento.</p>
